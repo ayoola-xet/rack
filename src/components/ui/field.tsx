@@ -12,14 +12,14 @@ export function Field({
 }) {
   return (
     <label className={cn("block", className)}>
-      <span className="text-xs font-medium uppercase tracking-widest text-subtle">{label}</span>
-      <div className="mt-1.5">{children}</div>
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-subtle">{label}</span>
+      <div className="mt-1">{children}</div>
     </label>
   );
 }
 
 const controlClass =
-  "h-11 w-full rounded-md bg-surface-2 px-3 text-sm text-fg shadow-card outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring/70";
+  "h-9 sm:h-10 w-full rounded-lg bg-surface-2 px-3 text-xs sm:text-sm text-fg shadow-card outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring/70";
 
 export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return <input className={cn(controlClass, className)} {...props} />;
@@ -32,7 +32,7 @@ export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectE
 export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
-      className={cn(controlClass, "h-24 resize-none py-2.5", className)}
+      className={cn(controlClass, "h-20 resize-none py-2", className)}
       {...props}
     />
   );

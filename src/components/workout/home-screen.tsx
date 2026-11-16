@@ -81,25 +81,25 @@ export function HomeScreen() {
 
   return (
     <AppShell nav>
-      <header className="flex items-center justify-between px-5 pt-6 pb-2">
+      <header className="flex items-center justify-between px-4 pt-2.5 pb-1">
         <AppHeaderTitle />
-        <span className="text-xs font-medium uppercase tracking-widest text-subtle">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-subtle">
           Training log
         </span>
       </header>
 
-      <main className="flex flex-1 flex-col px-5 pb-8">
-        {/* Body weight card */}
-        <section className="mt-5 rounded-xl bg-surface p-4 shadow-card">
-          <div className="flex items-start justify-between gap-3">
+      <main className="flex flex-1 flex-col px-4 pb-4">
+        {/* Compact Body weight card */}
+        <section className="mt-2 rounded-xl bg-surface p-3 shadow-card">
+          <div className="flex items-start justify-between gap-2">
             <div>
-              <p className="text-xs font-medium uppercase tracking-widest text-subtle">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-subtle">
                 Body weight
               </p>
-              <p className="mt-1 font-display text-3xl font-semibold tabular-nums text-fg">
+              <p className="mt-0.5 font-display text-2xl font-bold tabular-nums text-fg leading-none">
                 {latestWeight ? `${formatKg(latestWeight.kg)} kg` : "—"}
               </p>
-              <p className="mt-1 text-xs text-muted">
+              <p className="mt-1 text-[11px] text-muted">
                 {goalWeight == null
                   ? "Set a goal in Goals"
                   : `Goal ${formatKg(goalWeight)} kg${
@@ -116,12 +116,12 @@ export function HomeScreen() {
               </p>
             </div>
             {weightProgressPct != null && (
-              <p className="font-display text-xl font-semibold tabular-nums text-accent">
+              <span className="font-display text-lg font-bold tabular-nums text-accent">
                 {Math.round(weightProgressPct)}%
-              </p>
+              </span>
             )}
           </div>
-          <div className="mt-3 flex gap-2">
+          <div className="mt-2 flex gap-1.5">
             <Input
               type="number"
               inputMode="decimal"
@@ -134,6 +134,7 @@ export function HomeScreen() {
             />
             <Button
               type="button"
+              size="sm"
               onClick={handleLogWeight}
               disabled={!hydrated || !weightInput}
             >
@@ -143,15 +144,15 @@ export function HomeScreen() {
         </section>
 
         {goals.note && (
-          <p className="mt-4 text-sm text-muted">
-            <span className="text-subtle">Chase · </span>
+          <p className="mt-2 text-xs text-muted truncate">
+            <span className="text-subtle font-medium">Chase · </span>
             {goals.note}
           </p>
         )}
 
-        {/* Weekday Selector */}
+        {/* Compact Weekday Selector */}
         {ordered.length > 1 && (
-          <div className="mt-6 flex gap-2 overflow-x-auto pb-1">
+          <div className="mt-2.5 flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
             {ordered.map((day) => {
               const isActive = (activeProgram?.id ?? "") === day.id;
               return (
@@ -160,7 +161,7 @@ export function HomeScreen() {
                   type="button"
                   onClick={() => setSelectedDayId(day.id)}
                   className={cn(
-                    "h-11 shrink-0 rounded-md px-4 text-sm font-medium transition-colors",
+                    "h-8 shrink-0 rounded-lg px-3 text-xs font-semibold transition-colors",
                     isActive
                       ? "bg-primary text-primary-fg"
                       : "bg-surface text-muted shadow-card hover:text-fg",
@@ -173,25 +174,29 @@ export function HomeScreen() {
           </div>
         )}
 
-        {/* Selected Program Header */}
+        {/* Selected Program Header - Compact */}
         {activeProgram ? (
-          <>
-            <p className="mt-6 text-xs font-medium uppercase tracking-widest text-subtle">
-              {activeProgram.exercises.length} lift
-              {activeProgram.exercises.length === 1 ? "" : "s"}
-            </p>
-            <h1 className="mt-2 font-display text-5xl font-semibold leading-none tracking-tight text-fg">
+          <div className="mt-2.5">
+            <div className="flex items-baseline justify-between">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-subtle">
+                {activeProgram.exercises.length} lift
+                {activeProgram.exercises.length === 1 ? "" : "s"}
+              </span>
+              <span className="text-xs text-muted font-medium">
+                {activeProgram.split || "Split"}
+              </span>
+            </div>
+            <h1 className="mt-0.5 font-display text-3xl font-bold leading-none tracking-tight text-fg">
               {activeProgram.weekday}
             </h1>
-            <p className="mt-3 text-lg text-muted">
-              {activeProgram.split || "Add a split name"}
-            </p>
             {activeProgram.blurb && (
-              <p className="mt-2 text-sm text-subtle">{activeProgram.blurb}</p>
+              <p className="mt-1 text-xs text-subtle line-clamp-2">
+                {activeProgram.blurb}
+              </p>
             )}
-          </>
+          </div>
         ) : (
-          <h1 className="mt-6 font-display text-4xl font-semibold text-fg">
+          <h1 className="mt-3 font-display text-2xl font-bold text-fg">
             Add a training day
           </h1>
         )}
@@ -207,8 +212,8 @@ export function HomeScreen() {
           />
         ) : activeProgram && activeProgram.exercises.length > 0 ? (
           <Button
-            className="mt-8"
-            size="xl"
+            className="mt-3"
+            size="lg"
             onClick={handleStart}
             disabled={!hydrated}
           >
@@ -217,8 +222,8 @@ export function HomeScreen() {
           </Button>
         ) : (
           <Button
-            className="mt-8"
-            size="xl"
+            className="mt-3"
+            size="lg"
             variant="secondary"
             onClick={() => {
               if (activeProgram) {
@@ -246,9 +251,11 @@ export function HomeScreen() {
 
         {/* At a glance (recent 4 sessions) */}
         {recentSessions.length > 0 && (
-          <section className="mt-8">
+          <section className="mt-3.5">
             <div className="flex items-baseline justify-between">
-              <h2 className="text-sm font-medium text-fg">At a glance</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-subtle">
+                At a glance
+              </h2>
               <Link
                 to="/progress"
                 className="text-xs font-medium text-muted hover:text-fg"
@@ -256,7 +263,7 @@ export function HomeScreen() {
                 Charts
               </Link>
             </div>
-            <div className="mt-3 grid grid-cols-4 gap-2">
+            <div className="mt-1.5 grid grid-cols-4 gap-1.5">
               {recentSessions.map((session) => {
                 const summary = sessionSummary(
                   session,
@@ -271,20 +278,20 @@ export function HomeScreen() {
                 return (
                   <div
                     key={session.id}
-                    className="rounded-lg bg-surface px-2 py-3 text-center shadow-card"
+                    className="rounded-lg bg-surface px-1.5 py-2 text-center shadow-card"
                   >
-                    <p className="text-xs text-subtle">
+                    <p className="text-[10px] text-subtle">
                       {formatDate(session.startedAt)}
                     </p>
                     <p
                       className={cn(
-                        "mt-1 font-display text-lg font-semibold tabular-nums",
+                        "mt-0.5 font-display text-base font-bold tabular-nums",
                         color,
                       )}
                     >
                       {summary.liftsHit}/{summary.liftsTotal}
                     </p>
-                    <p className="mt-0.5 text-xs uppercase tracking-wider text-muted">
+                    <p className="text-[9px] uppercase tracking-wider text-muted">
                       {summary.status}
                     </p>
                   </div>
@@ -294,11 +301,13 @@ export function HomeScreen() {
           </section>
         )}
 
-        {/* Lifts list */}
+        {/* Lifts list - Compact */}
         {activeProgram && activeProgram.exercises.length > 0 && (
-          <section className="mt-8">
+          <section className="mt-3.5">
             <div className="flex items-baseline justify-between">
-              <h2 className="text-sm font-medium text-fg">Lifts</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-subtle">
+                Lifts
+              </h2>
               <Link
                 to="/programs/$dayId"
                 params={{ dayId: activeProgram.id }}
@@ -307,24 +316,24 @@ export function HomeScreen() {
                 Edit
               </Link>
             </div>
-            <ol className="mt-3 divide-y divide-border rounded-xl bg-surface shadow-card">
+            <ol className="mt-1.5 divide-y divide-border rounded-xl bg-surface shadow-card">
               {activeProgram.exercises.map((ex, idx) => (
                 <li
                   key={ex.id}
-                  className="flex items-start gap-3 px-4 py-3.5"
+                  className="flex items-center gap-2.5 px-3 py-2.5"
                 >
-                  <span className="mt-0.5 w-5 font-display text-sm tabular-nums text-subtle">
+                  <span className="w-4 font-display text-xs tabular-nums text-subtle font-semibold">
                     {idx + 1}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-fg">
+                    <p className="text-xs font-semibold text-fg truncate">
                       {ex.name || "Untitled lift"}
                     </p>
-                    <p className="mt-0.5 text-xs text-muted">
-                      {ex.group || "Ungrouped"} · {ex.cue}
+                    <p className="text-[11px] text-muted truncate">
+                      {ex.group || "Lift"} · {ex.cue}
                     </p>
                   </div>
-                  <span className="shrink-0 text-xs tabular-nums text-subtle">
+                  <span className="shrink-0 text-[11px] tabular-nums text-subtle font-medium">
                     {prescribedWeightLabel(ex) ?? "log kg"}
                   </span>
                 </li>
@@ -336,9 +345,9 @@ export function HomeScreen() {
         <button
           type="button"
           onClick={handleCreateDay}
-          className="mt-6 flex h-11 items-center justify-center gap-2 text-sm font-medium text-muted hover:text-fg"
+          className="mt-3 flex h-8 items-center justify-center gap-1.5 text-xs font-medium text-muted hover:text-fg"
         >
-          <Plus className="size-4" />
+          <Plus className="size-3.5" />
           Add a training day
         </button>
       </main>
@@ -364,31 +373,33 @@ function ActiveSessionBanner({
   const totalLifts = program?.exercises.length ?? 0;
 
   return (
-    <section className="mt-8 rounded-xl bg-surface p-4 shadow-card">
-      <p className="text-xs font-medium uppercase tracking-widest text-short">
-        In progress
-      </p>
-      <p className="mt-2 font-display text-2xl font-semibold tracking-tight text-fg">
+    <section className="mt-3 rounded-xl bg-surface p-3 shadow-card">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-short">
+          In progress
+        </span>
+        <span className="text-xs text-muted">
+          {formatTime(session.startedAt)}
+        </span>
+      </div>
+      <p className="mt-1 font-display text-xl font-bold tracking-tight text-fg">
         {program?.weekday ?? "Session"} · {summary.liftsHit}/{totalLifts} lifts at floor
       </p>
-      <p className="mt-1 text-sm text-muted">
-        Started {formatTime(session.startedAt)} · {formatDate(session.startedAt)}
-      </p>
-      <div className="mt-4 flex gap-2">
-        <Button className="flex-1" onClick={onResume}>
+      <div className="mt-2.5 flex gap-2">
+        <Button size="sm" className="flex-1" onClick={onResume}>
           Resume
         </Button>
-        <Button className="flex-1" variant="secondary" onClick={onFinish}>
+        <Button size="sm" className="flex-1" variant="secondary" onClick={onFinish}>
           Save & end
         </Button>
       </div>
 
       {confirmDrop ? (
-        <div className="mt-3 rounded-md bg-surface-2 px-3 py-3">
-          <p className="text-sm text-muted">
-            Drop this session? Logged sets will be gone.
+        <div className="mt-2 rounded-lg bg-surface-2 p-2">
+          <p className="text-xs text-muted">
+            Drop this session? Logged sets will be deleted.
           </p>
-          <div className="mt-2 flex gap-2">
+          <div className="mt-1.5 flex gap-2">
             <Button size="sm" variant="danger" onClick={onDiscard}>
               Drop
             </Button>
@@ -400,7 +411,7 @@ function ActiveSessionBanner({
       ) : (
         <button
           type="button"
-          className="mt-3 h-11 w-full text-sm text-subtle hover:text-muted"
+          className="mt-2 h-7 w-full text-xs text-subtle hover:text-miss"
           onClick={() => setConfirmDrop(true)}
         >
           Drop session
@@ -421,23 +432,23 @@ function LastSessionCard({
   const color = summary.status === "hit" ? "text-hit" : "text-miss";
 
   return (
-    <section className="mt-6 rounded-xl bg-surface p-4 shadow-card">
-      <div className="flex items-start justify-between gap-3">
+    <section className="mt-3 rounded-xl bg-surface p-3 shadow-card">
+      <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-xs font-medium uppercase tracking-widest text-subtle">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-subtle">
             Last session
           </p>
-          <p className="mt-1 text-sm text-muted">
+          <p className="text-xs text-muted mt-0.5">
             {program?.weekday ?? "Day"} · {formatDate(session.startedAt)}
             {session.finishedAt ? ` · ${formatTime(session.finishedAt)}` : ""}
           </p>
         </div>
-        <span className={cn("font-display text-xl font-semibold tabular-nums", color)}>
+        <span className={cn("font-display text-lg font-bold tabular-nums", color)}>
           {summary.headline}
         </span>
       </div>
-      <p className="mt-2 flex items-center gap-1.5 text-sm text-muted">
-        {summary.status === "hit" && <Check className="size-3.5 text-hit" />}
+      <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
+        {summary.status === "hit" && <Check className="size-3 text-hit" />}
         {summary.detail}
       </p>
     </section>

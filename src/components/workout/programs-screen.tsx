@@ -19,34 +19,34 @@ export function ProgramsScreen() {
 
   return (
     <AppShell nav>
-      <header className="flex items-center justify-between px-5 pt-6 pb-2">
+      <header className="flex items-center justify-between px-4 pt-2.5 pb-1">
         <AppHeaderTitle />
-        <span className="text-xs font-medium uppercase tracking-widest text-subtle">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-subtle">
           Program
         </span>
       </header>
 
-      <main className="flex-1 px-5 pb-10">
-        <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight text-fg">
+      <main className="flex-1 px-4 pb-4">
+        <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-fg">
           Your days
         </h1>
-        <p className="mt-2 text-sm text-muted">
-          You own the program. Monday is seeded. Tuesday is back and shoulders — add the lifts you actually do.
+        <p className="mt-0.5 text-xs text-muted">
+          Monday is chest & arms. Tuesday is back & shoulders. Customize to your split.
         </p>
 
-        <ul className="mt-6 space-y-3">
+        <ul className="mt-3 space-y-2">
           {ordered.map((day) => (
             <li key={day.id}>
               <Link
                 to="/programs/$dayId"
                 params={{ dayId: day.id }}
-                className="flex items-center gap-3 rounded-xl bg-surface px-4 py-4 shadow-card hover:bg-surface/80 transition-colors"
+                className="flex items-center gap-2.5 rounded-xl bg-surface px-3.5 py-3 shadow-card hover:bg-surface/80 transition-colors"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="font-display text-2xl font-semibold tracking-tight text-fg">
+                  <p className="font-display text-xl font-bold tracking-tight text-fg">
                     {day.weekday}
                   </p>
-                  <p className="mt-0.5 text-sm text-muted">
+                  <p className="mt-0.5 text-xs text-muted">
                     {day.split || "No split name"} · {day.exercises.length} lift
                     {day.exercises.length === 1 ? "" : "s"}
                   </p>
@@ -58,8 +58,8 @@ export function ProgramsScreen() {
         </ul>
 
         <Button
-          className="mt-6"
-          size="xl"
+          className="mt-4"
+          size="lg"
           variant="secondary"
           onClick={handleAddDay}
         >

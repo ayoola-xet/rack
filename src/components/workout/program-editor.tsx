@@ -7,7 +7,7 @@ import {
   WEEKDAYS,
 } from "@/lib/workout/program";
 import { useWorkoutStore } from "@/lib/workout/store";
-import type { ExerciseDef, ProgramDay } from "@/lib/workout/types";
+import type { ExerciseDef } from "@/lib/workout/types";
 import { AppShell, BackLink } from "./shell";
 
 export function ProgramEditor({ dayId }: { dayId: string }) {
@@ -25,10 +25,10 @@ export function ProgramEditor({ dayId }: { dayId: string }) {
   if (!day) {
     return (
       <AppShell nav>
-        <header className="flex items-center px-3 pt-4">
+        <header className="flex items-center px-3 pt-2.5">
           <BackLink to="/programs" label="Back" />
         </header>
-        <p className="px-5 pt-8 text-sm text-muted">That day is gone.</p>
+        <p className="px-4 pt-4 text-xs text-muted">That day is gone.</p>
       </AppShell>
     );
   }
@@ -40,23 +40,23 @@ export function ProgramEditor({ dayId }: { dayId: string }) {
 
   return (
     <AppShell nav>
-      <header className="flex items-center justify-between px-3 pt-4 pb-2">
+      <header className="flex items-center justify-between px-3 pt-2 pb-1 border-b border-border/40">
         <BackLink to="/programs" label="Back to program" />
-        <p className="font-display text-lg font-semibold tracking-tight text-fg">
+        <p className="font-display text-base font-bold tracking-tight text-fg">
           {day.weekday}
         </p>
         <button
           type="button"
           aria-label="Delete day"
           onClick={handleDelete}
-          className="flex size-11 items-center justify-center text-miss hover:text-miss/80"
+          className="flex size-8 items-center justify-center rounded-lg text-miss hover:text-miss/80 hover:bg-surface"
         >
           <Trash2 className="size-4" />
         </button>
       </header>
 
-      <main className="flex-1 px-5 pb-10">
-        <div className="grid grid-cols-2 gap-3">
+      <main className="flex-1 px-4 pb-4">
+        <div className="mt-2.5 grid grid-cols-2 gap-2">
           <Field label="Day">
             <Select
               value={(WEEKDAYS as readonly string[]).includes(day.weekday) ? day.weekday : "Custom"}
@@ -83,22 +83,24 @@ export function ProgramEditor({ dayId }: { dayId: string }) {
           </Field>
         </div>
 
-        <Field className="mt-3" label="Note">
+        <Field className="mt-2" label="Note">
           <Textarea
             value={day.blurb}
-            placeholder="You write this day. Add the lifts you actually do."
+            placeholder="Focus cue for the day..."
             onChange={(e) => updateDay(dayId, { blurb: e.target.value })}
           />
         </Field>
 
-        <h2 className="mt-8 text-sm font-medium text-fg">Lifts in order</h2>
+        <h2 className="mt-3.5 text-xs font-semibold uppercase tracking-wider text-subtle">
+          Lifts in order
+        </h2>
         {day.exercises.length === 0 && (
-          <p className="mt-2 text-sm text-muted">
-            Nothing hardcoded. Add pull-ups, rows, laterals — whatever your {day.weekday} actually is.
+          <p className="mt-1 text-xs text-muted">
+            Add pull-ups, rows, curls — whatever your {day.weekday} is.
           </p>
         )}
 
-        <div className="mt-3 space-y-4">
+        <div className="mt-2 space-y-2">
           {day.exercises.map((ex, idx) => (
             <ExerciseEditorCard
               key={ex.id}
@@ -113,8 +115,8 @@ export function ProgramEditor({ dayId }: { dayId: string }) {
         </div>
 
         <Button
-          className="mt-4"
-          size="xl"
+          className="mt-3"
+          size="lg"
           variant="secondary"
           onClick={() => addExercise(dayId)}
         >
@@ -170,7 +172,7 @@ function ExerciseEditorCard({
   };
 
   return (
-    <article className="rounded-xl bg-surface p-4 shadow-card">
+    <article className="rounded-xl bg-surface p-3 shadow-card">
       <div className="flex items-center gap-1">
         <Input
           value={exercise.name}
@@ -183,30 +185,30 @@ function ExerciseEditorCard({
           aria-label="Move up"
           disabled={isFirst}
           onClick={() => onMove(-1)}
-          className="flex size-11 items-center justify-center text-muted disabled:opacity-30 hover:text-fg"
+          className="flex size-8 items-center justify-center rounded text-muted disabled:opacity-30 hover:text-fg hover:bg-surface-2"
         >
-          <ChevronUp className="size-4" />
+          <ChevronUp className="size-3.5" />
         </button>
         <button
           type="button"
           aria-label="Move down"
           disabled={isLast}
           onClick={() => onMove(1)}
-          className="flex size-11 items-center justify-center text-muted disabled:opacity-30 hover:text-fg"
+          className="flex size-8 items-center justify-center rounded text-muted disabled:opacity-30 hover:text-fg hover:bg-surface-2"
         >
-          <ChevronDown className="size-4" />
+          <ChevronDown className="size-3.5" />
         </button>
         <button
           type="button"
           aria-label="Remove lift"
           onClick={onRemove}
-          className="flex size-11 items-center justify-center text-miss hover:text-miss/80"
+          className="flex size-8 items-center justify-center rounded text-miss hover:text-miss/80 hover:bg-surface-2"
         >
-          <Trash2 className="size-4" />
+          <Trash2 className="size-3.5" />
         </button>
       </div>
 
-      <Field className="mt-3" label="Muscle">
+      <Field className="mt-2" label="Muscle">
         <Input
           list="rack-groups"
           value={exercise.group}
@@ -215,7 +217,7 @@ function ExerciseEditorCard({
         />
       </Field>
 
-      <div className="mt-3 grid grid-cols-3 gap-2">
+      <div className="mt-2 grid grid-cols-3 gap-1.5">
         <Field label="Min sets">
           <Input
             type="number"
@@ -253,7 +255,7 @@ function ExerciseEditorCard({
         </Field>
       </div>
 
-      <Field className="mt-3" label="Target load">
+      <Field className="mt-2" label="Target load">
         <Select value={loadKind} onChange={(e) => handleLoadKindChange(e.target.value)}>
           <option value="bar">Total kg</option>
           <option value="plates_each_side">Plates each side</option>
@@ -262,7 +264,7 @@ function ExerciseEditorCard({
       </Field>
 
       {loadKind === "bar" && (
-        <Field className="mt-3" label="Kilograms">
+        <Field className="mt-2" label="Kilograms">
           <Input
             type="number"
             min={0}
@@ -278,7 +280,7 @@ function ExerciseEditorCard({
       )}
 
       {loadKind === "plates_each_side" && (
-        <Field className="mt-3" label="Plate kg each side">
+        <Field className="mt-2" label="Plate kg each side">
           <Input
             type="number"
             min={0}

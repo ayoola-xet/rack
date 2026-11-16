@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Minus,
   Plus,
-  RotateCcw,
   Settings,
   Undo2,
   Volume2,
@@ -20,7 +19,6 @@ import {
   soundAlarm,
 } from "@/lib/workout/audio-alarm";
 import {
-  BODY_WEIGHT_STEP,
   defaultWeightKg,
   prescribedWeightLabel,
   programById,
@@ -63,14 +61,14 @@ export function SessionScreen() {
   if (!session) {
     return (
       <AppShell>
-        <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-          <p className="font-display text-2xl font-semibold text-fg">
+        <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
+          <p className="font-display text-xl font-bold text-fg">
             No session running
           </p>
-          <p className="mt-2 text-sm text-muted">
+          <p className="mt-1 text-xs text-muted">
             Start a day from the home screen.
           </p>
-          <Button asChild className="mt-6" size="lg">
+          <Button asChild className="mt-4" size="md">
             <Link to="/">Back home</Link>
           </Button>
         </div>
@@ -82,11 +80,11 @@ export function SessionScreen() {
   if (!program || program.exercises.length === 0) {
     return (
       <AppShell>
-        <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-          <p className="font-display text-2xl font-semibold text-fg">
+        <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
+          <p className="font-display text-xl font-bold text-fg">
             This day has no lifts
           </p>
-          <Button asChild className="mt-6" size="lg">
+          <Button asChild className="mt-4" size="md">
             <Link to="/">Back home</Link>
           </Button>
         </div>
@@ -120,7 +118,7 @@ export function SessionScreen() {
   };
 
   const handlePause = () => {
-    void navigate({ to: "/session" }).then(() => navigate({ to: "/" }));
+    void navigate({ to: "/" });
   };
 
   const handleEnd = () => {
@@ -131,23 +129,23 @@ export function SessionScreen() {
   const isLastLift = activeIdx === program.exercises.length - 1;
 
   return (
-    <AppShell className="h-dvh overflow-hidden">
-      {/* Session Header */}
-      <header className="flex items-center gap-3 px-3 pt-3 pb-2">
+    <AppShell className="h-dvh overflow-hidden flex flex-col justify-between">
+      {/* Session Header - Compact */}
+      <header className="flex items-center gap-2 px-3 pt-2 pb-1.5 shrink-0 border-b border-border/40">
         <button
           type="button"
           onClick={handlePause}
           aria-label="Pause session"
-          className="flex size-11 items-center justify-center rounded-md text-muted hover:bg-surface hover:text-fg"
+          className="flex size-9 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-fg"
         >
-          <X className="size-5" />
+          <X className="size-4" />
         </button>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-xl font-semibold tracking-tight text-fg">
+          <p className="truncate font-display text-base font-bold tracking-tight text-fg leading-none">
             {activeExercise.name}
           </p>
-          <p className="text-xs text-muted">
+          <p className="text-[10px] text-muted truncate mt-0.5">
             {activeExercise.group || "Lifts"} · {activeIdx + 1}/{program.exercises.length}
           </p>
         </div>
@@ -164,53 +162,55 @@ export function SessionScreen() {
             setShowSettings(true);
           }}
           className={cn(
-            "flex size-10 items-center justify-center rounded-lg transition-colors",
+            "flex size-8 items-center justify-center rounded-lg transition-colors",
             timerSettings.alarmSound
               ? "text-muted hover:bg-surface hover:text-fg"
               : "text-miss hover:bg-surface",
           )}
         >
           {timerSettings.alarmSound ? (
-            <Bell className="size-4" />
+            <Bell className="size-3.5" />
           ) : (
-            <BellOff className="size-4" />
+            <BellOff className="size-3.5" />
           )}
         </button>
 
         <button
           type="button"
           onClick={handleEnd}
-          className="h-10 rounded-md px-3 text-sm font-medium text-muted hover:bg-surface hover:text-fg"
+          className="h-8 rounded-lg px-2 text-xs font-semibold text-muted hover:bg-surface hover:text-fg"
         >
           End
         </button>
       </header>
 
       {/* Exercise Switcher Navigation Tabs */}
-      <ExerciseSwitcher
-        program={program}
-        session={session}
-        activeId={activeExercise.id}
-        onSelect={setActiveExercise}
-      />
+      <div className="pt-1.5 shrink-0">
+        <ExerciseSwitcher
+          program={program}
+          session={session}
+          activeId={activeExercise.id}
+          onSelect={setActiveExercise}
+        />
+      </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto px-5 pt-3 pb-3">
-        <p className="text-sm text-muted">{activeExercise.cue}</p>
+      {/* Main Content Area - Scrollable */}
+      <div className="flex-1 overflow-y-auto px-4 pt-2 pb-2">
+        <p className="text-xs text-muted leading-tight">{activeExercise.cue}</p>
         {prevSets.length > 0 ? (
-          <p className="mt-1 text-xs text-subtle">
-            Last time {prevSets.map(formatSet).join(" · ")}
+          <p className="mt-0.5 text-[10px] text-subtle truncate">
+            Last time: {prevSets.map(formatSet).join(" · ")}
           </p>
         ) : (
-          <p className="mt-1 text-xs text-subtle">First time on this lift in the log.</p>
+          <p className="mt-0.5 text-[10px] text-subtle">First time on this lift in log.</p>
         )}
 
-        {/* Targets & Owed Status */}
+        {/* Targets & Owed Status - Compact */}
         <OwedMetricsCard exercise={activeExercise} owed={owed} />
 
         {/* Logged Sets list */}
         {loggedSets.length > 0 ? (
-          <ol className="mt-4 space-y-2 pb-2">
+          <ol className="mt-2.5 space-y-1.5 pb-1">
             {loggedSets.map((set, idx) => (
               <LoggedSetItem
                 key={set.id}
@@ -223,13 +223,13 @@ export function SessionScreen() {
             ))}
           </ol>
         ) : (
-          <p className="mt-5 text-sm text-subtle">
-            No sets yet. Log each set as you finish it.
+          <p className="mt-3 text-xs text-subtle text-center py-2">
+            No sets logged yet.
           </p>
         )}
       </div>
 
-      {/* Rest Timer, Alarm Alert, and Set Logger Footer */}
+      {/* Rest Timer, Alarm Alert, and Set Logger Footer - Compact */}
       <SessionFooter
         exercise={activeExercise}
         sets={loggedSets}
@@ -281,8 +281,8 @@ function SessionElapsedTimer({ startedAt }: { startedAt: number }) {
   const elapsedMs = Math.max(0, now - startedAt);
 
   return (
-    <div className="flex items-center gap-1 rounded-md bg-surface px-2 py-1 text-xs font-medium tabular-nums text-muted shadow-card">
-      <span className="text-subtle">⏱️</span>
+    <div className="flex items-center gap-1 rounded-md bg-surface px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-muted shadow-card">
+      <span className="text-[10px]">⏱️</span>
       <span>{formatClock(elapsedMs)}</span>
     </div>
   );
@@ -300,7 +300,7 @@ function ExerciseSwitcher({
   onSelect: (id: string) => void;
 }) {
   return (
-    <div className="flex gap-1.5 overflow-x-auto px-5 pb-1">
+    <div className="flex gap-1 overflow-x-auto px-4 pb-0.5 scrollbar-none">
       {program.exercises.map((ex, idx) => {
         const isFloorHit = (session.logs[ex.id]?.length ?? 0) >= ex.minSets;
         const isActive = ex.id === activeId;
@@ -313,14 +313,14 @@ function ExerciseSwitcher({
             aria-current={isActive}
             onClick={() => onSelect(ex.id)}
             className={cn(
-              "flex h-9 min-w-8 flex-1 items-center justify-center rounded-md text-xs font-semibold tabular-nums touch-manipulation transition-colors",
-              isActive && "bg-primary text-primary-fg shadow-sm",
+              "flex h-7 min-w-7 flex-1 items-center justify-center rounded-lg text-[11px] font-bold tabular-nums touch-manipulation transition-colors",
+              isActive && "bg-primary text-primary-fg shadow-xs",
               !isActive && isFloorHit && "bg-surface text-hit shadow-card",
               !isActive && !isFloorHit && "bg-surface text-subtle shadow-card hover:text-muted",
             )}
           >
             {isFloorHit && !isActive ? (
-              <Check className="size-3.5 text-hit" />
+              <Check className="size-3 text-hit" />
             ) : (
               idx + 1
             )}
@@ -353,30 +353,30 @@ function OwedMetricsCard({
   }
 
   return (
-    <div className="mt-4 grid grid-cols-2 gap-2">
-      <div className="rounded-lg bg-surface px-4 py-3 shadow-card">
-        <p className="text-xs font-medium uppercase tracking-widest text-subtle">
+    <div className="mt-2 grid grid-cols-2 gap-1.5">
+      <div className="rounded-lg bg-surface px-3 py-2 shadow-card">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-subtle">
           {owedTitle}
         </p>
-        <p className="mt-1 font-display text-2xl font-semibold tracking-tight text-fg">
+        <p className="mt-0.5 font-display text-xl font-bold tracking-tight text-fg leading-none">
           {owedMain}
         </p>
-        <p className="mt-0.5 text-xs text-muted">{owedSub}</p>
+        <p className="mt-0.5 text-[10px] text-muted">{owedSub}</p>
       </div>
 
-      <div className="rounded-lg bg-surface px-4 py-3 shadow-card">
-        <p className="text-xs font-medium uppercase tracking-widest text-subtle">
+      <div className="rounded-lg bg-surface px-3 py-2 shadow-card">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-subtle">
           Short
         </p>
         <p
           className={cn(
-            "mt-1 font-display text-2xl font-semibold tracking-tight tabular-nums",
+            "mt-0.5 font-display text-xl font-bold tracking-tight tabular-nums leading-none",
             owed.shortfallReps > 0 || owed.lightSets > 0 ? "text-short" : "text-fg",
           )}
         >
           {owed.shortfallReps} reps
         </p>
-        <p className="mt-0.5 text-xs text-muted">
+        <p className="mt-0.5 text-[10px] text-muted">
           {owed.lightSets > 0
             ? `${owed.lightSets} light set${owed.lightSets === 1 ? "" : "s"}`
             : "vs prescription"}
@@ -402,19 +402,19 @@ function LoggedSetItem({
   const meets = setMeetsTarget(exercise, set);
 
   return (
-    <li className="flex items-center gap-3 rounded-md bg-surface px-3 py-2.5 shadow-card">
-      <span className="w-10 text-xs font-medium uppercase tracking-wider text-subtle">
+    <li className="flex items-center gap-2 rounded-lg bg-surface px-2.5 py-1.5 shadow-card">
+      <span className="w-9 text-[10px] font-semibold uppercase tracking-wider text-subtle">
         Set {index + 1}
       </span>
-      <span className="flex-1 font-display text-lg font-semibold tabular-nums text-fg">
+      <span className="flex-1 font-display text-base font-bold tabular-nums text-fg">
         {formatKg(set.weightKg)}
-        <span className="text-muted"> × </span>
+        <span className="text-muted font-normal text-xs"> × </span>
         {set.reps}
       </span>
       <span
         className={cn(
-          "text-xs font-medium uppercase tracking-wider",
-          meets ? "text-hit" : "text-short",
+          "text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded",
+          meets ? "bg-hit/10 text-hit" : "bg-short/10 text-short",
         )}
       >
         {meets ? "Hit" : "Short"}
@@ -424,12 +424,12 @@ function LoggedSetItem({
           type="button"
           aria-label="Undo last set"
           onClick={onUndo}
-          className="flex size-11 items-center justify-center text-muted hover:text-fg"
+          className="flex size-7 items-center justify-center rounded text-muted hover:text-fg hover:bg-surface-2"
         >
-          <Undo2 className="size-4" />
+          <Undo2 className="size-3.5" />
         </button>
       ) : (
-        <span className="size-11" />
+        <span className="size-7" />
       )}
     </li>
   );
@@ -451,21 +451,21 @@ function StepperControl({
   hint?: string;
 }) {
   return (
-    <div className="grid grid-cols-[3.5rem_1fr_3.5rem] items-center gap-2">
+    <div className="grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-2">
       <button
         type="button"
         aria-label={`Decrease ${label}`}
         onClick={onDecrease}
-        className="flex size-14 items-center justify-center rounded-lg bg-surface-2 text-fg shadow-card touch-manipulation active:scale-[0.98]"
+        className="flex size-10 items-center justify-center rounded-lg bg-surface-2 text-fg shadow-card touch-manipulation active:scale-[0.98]"
       >
-        <Minus className="size-5" strokeWidth={2.25} />
+        <Minus className="size-4" strokeWidth={2.5} />
       </button>
 
       <div className="flex flex-col items-center justify-center">
-        <p className="font-display text-5xl font-semibold leading-none tracking-tight tabular-nums text-fg">
+        <p className="font-display text-3xl font-bold leading-none tracking-tight tabular-nums text-fg">
           {display ?? value}
         </p>
-        <p className="mt-1 text-xs font-medium uppercase tracking-widest text-subtle">
+        <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-subtle">
           {hint ?? label}
         </p>
       </div>
@@ -474,9 +474,9 @@ function StepperControl({
         type="button"
         aria-label={`Increase ${label}`}
         onClick={onIncrease}
-        className="flex size-14 items-center justify-center rounded-lg bg-surface-2 text-fg shadow-card touch-manipulation active:scale-[0.98]"
+        className="flex size-10 items-center justify-center rounded-lg bg-surface-2 text-fg shadow-card touch-manipulation active:scale-[0.98]"
       >
-        <Plus className="size-5" strokeWidth={2.25} />
+        <Plus className="size-4" strokeWidth={2.5} />
       </button>
     </div>
   );
@@ -534,7 +534,7 @@ function SessionFooter({
   const nextLabel = isLastLift ? "Finish session" : "Next lift";
 
   return (
-    <footer className="shrink-0 border-t border-border bg-bg px-5 pt-2 pb-4">
+    <footer className="shrink-0 border-t border-border bg-bg px-4 pt-1.5 pb-3">
       {/* Rest Countdown Timer & Alarm Widget */}
       <RestTimerWidget
         until={restUntil}
@@ -547,24 +547,24 @@ function SessionFooter({
       />
 
       {owed.maxed ? (
-        <Button className="mt-1" size="xl" onClick={onNext}>
+        <Button className="mt-1" size="lg" onClick={onNext}>
           {nextLabel}
         </Button>
       ) : (
         <>
-          <StepperControl
-            label="kg"
-            value={formatKg(weight)}
-            onDecrease={() => stepWeight(-WEIGHT_STEP)}
-            onIncrease={() => stepWeight(WEIGHT_STEP)}
-            hint={
-              prescribedWeightLabel(exercise)
-                ? `kg · target ${prescribedWeightLabel(exercise)}`
-                : "kg"
-            }
-          />
+          <div className="space-y-1">
+            <StepperControl
+              label="kg"
+              value={formatKg(weight)}
+              onDecrease={() => stepWeight(-WEIGHT_STEP)}
+              onIncrease={() => stepWeight(WEIGHT_STEP)}
+              hint={
+                prescribedWeightLabel(exercise)
+                  ? `kg · target ${prescribedWeightLabel(exercise)}`
+                  : "kg"
+              }
+            />
 
-          <div className="mt-2.5">
             <StepperControl
               label="reps"
               value={String(reps)}
@@ -574,14 +574,14 @@ function SessionFooter({
             />
           </div>
 
-          <div className="mt-3.5 flex flex-col gap-2">
-            <Button size="xl" onClick={handleLogSet}>
+          <div className="mt-2.5 flex flex-col gap-1.5">
+            <Button size="lg" className="w-full" onClick={handleLogSet}>
               Log set {sets.length + 1}
             </Button>
             {owed.minHit && (
-              <Button variant="ghost" className="h-12 w-full" onClick={onNext}>
+              <Button variant="ghost" size="sm" className="h-8 w-full text-xs" onClick={onNext}>
                 {nextLabel}
-                <ChevronRight className="size-4" />
+                <ChevronRight className="size-3.5" />
               </Button>
             )}
           </div>
@@ -618,7 +618,6 @@ function RestTimerWidget({
   useEffect(() => {
     if (!isRunning) {
       if (until && !alarmFired && now >= until) {
-        // Fire Alarm!
         setAlarmFired(true);
         if (settings.alarmSound) {
           soundAlarm.playAlarm(settings.alarmSoundType);
@@ -640,7 +639,6 @@ function RestTimerWidget({
       const current = Date.now();
       setNow(current);
 
-      // Countdown tick beeps for 3, 2, 1 seconds
       if (settings.countdownBeeps && until) {
         const remainingSeconds = Math.ceil((until - current) / 1000);
         if (remainingSeconds <= 3 && remainingSeconds >= 1 && remainingSeconds !== lastSecRef.current) {
@@ -659,20 +657,19 @@ function RestTimerWidget({
     return Math.min(1, Math.max(0, remainingMs / total));
   }, [isRunning, remainingMs, total]);
 
-  // When timer just expired and alarm fired
   if (alarmFired && until && now - until < 6000) {
     return (
-      <div className="mb-2 flex items-center justify-between rounded-lg bg-surface-2 px-3 py-2 border border-hit/40 animate-pulse">
-        <div className="flex items-center gap-2">
+      <div className="mb-1.5 flex items-center justify-between rounded-lg bg-surface-2 px-2.5 py-1.5 border border-hit/40 animate-pulse">
+        <div className="flex items-center gap-1.5">
           <span className="flex size-2 rounded-full bg-hit" />
-          <p className="text-xs font-semibold uppercase tracking-widest text-hit">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-hit">
             Rest Done! Time to lift
           </p>
         </div>
         <button
           type="button"
           onClick={onSkip}
-          className="text-xs font-medium text-muted hover:text-fg"
+          className="text-xs font-semibold text-muted hover:text-fg"
         >
           Dismiss
         </button>
@@ -682,42 +679,41 @@ function RestTimerWidget({
 
   if (isRunning) {
     return (
-      <div className="mb-2 rounded-lg bg-surface px-3 py-2 shadow-card">
+      <div className="mb-1.5 rounded-lg bg-surface px-2.5 py-1.5 shadow-card">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="flex size-2 rounded-full bg-accent animate-ping" />
-            <p className="text-xs font-medium uppercase tracking-widest text-subtle">
-              Rest <span className="tabular-nums text-fg font-semibold text-sm ml-1">{formatClock(remainingMs)}</span>
+          <div className="flex items-center gap-1.5">
+            <span className="flex size-1.5 rounded-full bg-accent animate-ping" />
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-subtle">
+              Rest <span className="tabular-nums text-fg font-bold text-xs ml-1">{formatClock(remainingMs)}</span>
             </p>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={() => onAdd(15_000)}
-              className="rounded bg-surface-2 px-2 py-1 text-xs font-medium text-muted hover:text-fg"
+              className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold text-muted hover:text-fg"
             >
               +15s
             </button>
             <button
               type="button"
               onClick={() => onAdd(30_000)}
-              className="rounded bg-surface-2 px-2 py-1 text-xs font-medium text-muted hover:text-fg"
+              className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold text-muted hover:text-fg"
             >
               +30s
             </button>
             <button
               type="button"
               onClick={onSkip}
-              className="rounded px-2 py-1 text-xs font-medium text-subtle hover:text-fg"
+              className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-subtle hover:text-fg"
             >
               Skip
             </button>
           </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-2">
+        <div className="mt-1 h-1 overflow-hidden rounded-full bg-surface-2">
           <div
             className="h-full rounded-full bg-accent transition-[width] duration-200 ease-linear"
             style={{ width: `${Math.max(2, progressFraction * 100)}%` }}
@@ -727,38 +723,37 @@ function RestTimerWidget({
     );
   }
 
-  // Idle rest widget: quick start buttons
   return (
-    <div className="mb-2 flex items-center justify-between rounded-lg bg-surface/50 px-2.5 py-1.5 text-xs">
-      <span className="text-subtle font-medium uppercase tracking-wider text-[11px]">
+    <div className="mb-1 flex items-center justify-between rounded-lg bg-surface/40 px-2 py-1 text-[11px]">
+      <span className="text-subtle font-semibold uppercase tracking-wider text-[10px]">
         Rest timer
       </span>
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={() => onStart(60_000)}
-          className="rounded bg-surface-2 px-2 py-0.5 text-xs text-muted hover:text-fg"
+          className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium text-muted hover:text-fg"
         >
           1m
         </button>
         <button
           type="button"
           onClick={() => onStart(90_000)}
-          className="rounded bg-surface-2 px-2 py-0.5 text-xs text-muted hover:text-fg"
+          className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium text-muted hover:text-fg"
         >
           90s
         </button>
         <button
           type="button"
           onClick={() => onStart(120_000)}
-          className="rounded bg-surface-2 px-2 py-0.5 text-xs text-muted hover:text-fg"
+          className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium text-muted hover:text-fg"
         >
           2m
         </button>
         <button
           type="button"
           onClick={() => onStart(180_000)}
-          className="rounded bg-surface-2 px-2 py-0.5 text-xs text-muted hover:text-fg"
+          className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium text-muted hover:text-fg"
         >
           3m
         </button>
@@ -795,41 +790,41 @@ function TimerSettingsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs">
-      <div className="w-full max-w-md rounded-t-2xl border-t border-border bg-surface p-5 shadow-2xl">
-        <div className="flex items-center justify-between pb-3 border-b border-border">
-          <div className="flex items-center gap-2">
-            <Settings className="size-5 text-accent" />
-            <h2 className="text-base font-semibold text-fg">Timer & Alarm Settings</h2>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-xs">
+      <div className="w-full max-w-md rounded-t-2xl border-t border-border bg-surface p-4 shadow-2xl">
+        <div className="flex items-center justify-between pb-2.5 border-b border-border">
+          <div className="flex items-center gap-1.5">
+            <Settings className="size-4 text-accent" />
+            <h2 className="text-sm font-bold text-fg">Timer & Alarm Settings</h2>
           </div>
           <button
             type="button"
             aria-label="Close settings"
             onClick={onClose}
-            className="flex size-8 items-center justify-center rounded-md text-muted hover:text-fg"
+            className="flex size-7 items-center justify-center rounded-md text-muted hover:text-fg"
           >
             <X className="size-4" />
           </button>
         </div>
 
-        <div className="mt-4 space-y-4">
+        <div className="mt-3 space-y-3">
           {/* Sound Alarm Toggle */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-fg">Sound Alarm</p>
-              <p className="text-xs text-muted">Play alarm when rest finishes</p>
+              <p className="text-xs font-semibold text-fg">Sound Alarm</p>
+              <p className="text-[10px] text-muted">Play alarm when rest finishes</p>
             </div>
             <button
               type="button"
               onClick={() => onUpdate({ alarmSound: !settings.alarmSound })}
               className={cn(
-                "h-7 w-12 rounded-full p-0.5 transition-colors",
+                "h-6 w-11 rounded-full p-0.5 transition-colors",
                 settings.alarmSound ? "bg-accent" : "bg-surface-2",
               )}
             >
               <div
                 className={cn(
-                  "size-6 rounded-full bg-bg transition-transform",
+                  "size-5 rounded-full bg-bg transition-transform",
                   settings.alarmSound ? "translate-x-5" : "translate-x-0",
                 )}
               />
@@ -839,10 +834,10 @@ function TimerSettingsModal({
           {/* Sound Type Selection */}
           {settings.alarmSound && (
             <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-subtle">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-subtle">
                 Alarm Sound
               </p>
-              <div className="mt-2 grid grid-cols-4 gap-2">
+              <div className="mt-1.5 grid grid-cols-4 gap-1.5">
                 {(["chime", "bell", "beep", "gong"] as AlarmSoundType[]).map((type) => (
                   <button
                     key={type}
@@ -852,14 +847,14 @@ function TimerSettingsModal({
                       testAlarm(type);
                     }}
                     className={cn(
-                      "flex flex-col items-center justify-center rounded-lg p-2 text-xs font-medium capitalize transition-colors",
+                      "flex flex-col items-center justify-center rounded-lg p-1.5 text-[11px] font-medium capitalize transition-colors",
                       settings.alarmSoundType === type
                         ? "bg-primary text-primary-fg"
                         : "bg-surface-2 text-muted hover:text-fg",
                     )}
                   >
                     <span>{type}</span>
-                    <Volume2 className="mt-1 size-3.5 opacity-70" />
+                    <Volume2 className="mt-0.5 size-3 opacity-70" />
                   </button>
                 ))}
               </div>
@@ -869,20 +864,20 @@ function TimerSettingsModal({
           {/* Countdown Beeps */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-fg">3-2-1 Countdown Beeps</p>
-              <p className="text-xs text-muted">Audio tick warning before timer ends</p>
+              <p className="text-xs font-semibold text-fg">3-2-1 Countdown Beeps</p>
+              <p className="text-[10px] text-muted">Audio tick warning before timer ends</p>
             </div>
             <button
               type="button"
               onClick={() => onUpdate({ countdownBeeps: !settings.countdownBeeps })}
               className={cn(
-                "h-7 w-12 rounded-full p-0.5 transition-colors",
+                "h-6 w-11 rounded-full p-0.5 transition-colors",
                 settings.countdownBeeps ? "bg-accent" : "bg-surface-2",
               )}
             >
               <div
                 className={cn(
-                  "size-6 rounded-full bg-bg transition-transform",
+                  "size-5 rounded-full bg-bg transition-transform",
                   settings.countdownBeeps ? "translate-x-5" : "translate-x-0",
                 )}
               />
@@ -892,20 +887,20 @@ function TimerSettingsModal({
           {/* Vibration Toggle */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-fg">Vibration Alarm</p>
-              <p className="text-xs text-muted">Vibrate device on timer completion</p>
+              <p className="text-xs font-semibold text-fg">Vibration Alarm</p>
+              <p className="text-[10px] text-muted">Vibrate device on timer completion</p>
             </div>
             <button
               type="button"
               onClick={() => onUpdate({ alarmVibrate: !settings.alarmVibrate })}
               className={cn(
-                "h-7 w-12 rounded-full p-0.5 transition-colors",
+                "h-6 w-11 rounded-full p-0.5 transition-colors",
                 settings.alarmVibrate ? "bg-accent" : "bg-surface-2",
               )}
             >
               <div
                 className={cn(
-                  "size-6 rounded-full bg-bg transition-transform",
+                  "size-5 rounded-full bg-bg transition-transform",
                   settings.alarmVibrate ? "translate-x-5" : "translate-x-0",
                 )}
               />
@@ -915,21 +910,21 @@ function TimerSettingsModal({
           {/* Browser Notifications Toggle */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-fg">Background Notifications</p>
-              <p className="text-xs text-muted">Notify even if browser is in background</p>
+              <p className="text-xs font-semibold text-fg">Background Notifications</p>
+              <p className="text-[10px] text-muted">Notify even if browser is in background</p>
             </div>
             {notifGranted ? (
               <button
                 type="button"
                 onClick={() => onUpdate({ alarmNotifications: !settings.alarmNotifications })}
                 className={cn(
-                  "h-7 w-12 rounded-full p-0.5 transition-colors",
+                  "h-6 w-11 rounded-full p-0.5 transition-colors",
                   settings.alarmNotifications ? "bg-accent" : "bg-surface-2",
                 )}
               >
                 <div
                   className={cn(
-                    "size-6 rounded-full bg-bg transition-transform",
+                    "size-5 rounded-full bg-bg transition-transform",
                     settings.alarmNotifications ? "translate-x-5" : "translate-x-0",
                   )}
                 />
@@ -943,10 +938,10 @@ function TimerSettingsModal({
 
           {/* Default Rest Timer Duration */}
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-subtle">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-subtle">
               Default Rest Duration
             </p>
-            <div className="mt-2 grid grid-cols-4 gap-2">
+            <div className="mt-1.5 grid grid-cols-4 gap-1.5">
               {[
                 { label: "45s", ms: 45_000 },
                 { label: "60s", ms: 60_000 },
@@ -958,7 +953,7 @@ function TimerSettingsModal({
                   type="button"
                   onClick={() => onUpdate({ defaultRestMs: item.ms })}
                   className={cn(
-                    "rounded-lg p-2 text-xs font-medium transition-colors",
+                    "rounded-lg p-1.5 text-xs font-medium transition-colors",
                     settings.defaultRestMs === item.ms
                       ? "bg-primary text-primary-fg"
                       : "bg-surface-2 text-muted hover:text-fg",
@@ -971,7 +966,7 @@ function TimerSettingsModal({
           </div>
         </div>
 
-        <Button className="mt-6 w-full" onClick={onClose}>
+        <Button size="md" className="mt-4 w-full" onClick={onClose}>
           Done
         </Button>
       </div>

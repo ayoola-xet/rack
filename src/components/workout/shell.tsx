@@ -43,13 +43,13 @@ export function AppShell({
       )}
     >
       {isOffline && (
-        <div className="flex items-center justify-center gap-1.5 bg-surface-2 px-3 py-1.5 text-xs font-medium text-subtle">
-          <WifiOff className="size-3.5 text-short" />
-          <span>Offline mode — your logs stay safely saved on this device</span>
+        <div className="flex items-center justify-center gap-1.5 bg-surface-2 px-3 py-1 text-[11px] font-medium text-subtle border-b border-border/40">
+          <WifiOff className="size-3 text-short" />
+          <span>Offline mode — workout logs are safely saved locally</span>
         </div>
       )}
-      <div className={cn("flex min-h-0 flex-1 flex-col", nav && "pb-16")}>{children}</div>
-      <PwaInstallBanner />
+      <div className={cn("flex min-h-0 flex-1 flex-col", nav && "pb-20")}>{children}</div>
+      <PwaInstallBanner hasNav={nav} />
       {nav && <BottomNav />}
     </div>
   );
@@ -57,7 +57,7 @@ export function AppShell({
 
 export function AppHeaderTitle({ className }: { className?: string }) {
   return (
-    <Link to="/" className={cn("font-display text-2xl font-semibold tracking-tight text-fg", className)}>
+    <Link to="/" className={cn("font-display text-xl font-bold tracking-tight text-fg", className)}>
       RACK
     </Link>
   );
@@ -76,7 +76,7 @@ export function BottomNav() {
   });
 
   return (
-    <nav className="fixed bottom-0 left-1/2 z-20 flex w-full max-w-md -translate-x-1/2 border-t border-border bg-bg pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed bottom-0 left-1/2 z-20 flex w-full max-w-md -translate-x-1/2 border-t border-border/80 bg-bg/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]">
       {NAV_ITEMS.map((item) => {
         const Icon = item.icon;
         const isActive = item.exact
@@ -88,11 +88,11 @@ export function BottomNav() {
             key={item.to}
             to={item.to}
             className={cn(
-              "flex h-14 min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors",
+              "flex h-13 min-h-10 flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
               isActive ? "text-fg font-semibold" : "text-subtle hover:text-muted",
             )}
           >
-            <Icon className="size-4" strokeWidth={isActive ? 2.4 : 2} />
+            <Icon className="size-4" strokeWidth={isActive ? 2.4 : 1.9} />
             {item.label}
           </Link>
         );
@@ -106,9 +106,9 @@ export function BackLink({ to, label }: { to: string; label: string }) {
     <Link
       to={to}
       aria-label={label}
-      className="flex size-11 items-center justify-center text-muted hover:text-fg"
+      className="flex size-9 items-center justify-center rounded-md text-muted hover:text-fg hover:bg-surface"
     >
-      <ChevronLeft className="size-5" />
+      <ChevronLeft className="size-4" />
     </Link>
   );
 }

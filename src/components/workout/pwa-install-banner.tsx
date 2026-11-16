@@ -7,14 +7,22 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 }
 
-export function PwaInstallBanner() {
+export function PwaInstallBanner({ hasNav = false }: { hasNav?: boolean }) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(true); // default true until checked
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
 
   useEffect(() => {
+    // Check if dismissed before
+    const isDismissed = localStorage.getItem("rack_pwa_dismissed") === "true";
+    if (isDismissed) {
+      setDismissed(true);
+      return;
+    }
+    setDismissed(false);
+
     // Check if already in standalone / installed mode
     const inStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
@@ -40,12 +48,18 @@ export function PwaInstallBanner() {
 
   if (isStandalone || dismissed) return null;
 
+  const handleDismiss = () => {
+    setDismissed(true);
+    localStorage.setItem("rack_pwa_dismissed", "true");
+  };
+
   const handleInstallClick = async () => {
     if (deferredPrompt) {
       await deferredPrompt.prompt();
       const choice = await deferredPrompt.userChoice;
       if (choice.outcome === "accepted") {
         setDeferredPrompt(null);
+        handleDismiss();
       }
     } else if (isIOS) {
       setShowIOSPrompt(true);
@@ -55,44 +69,52 @@ export function PwaInstallBanner() {
   if (!deferredPrompt && !isIOS) return null;
 
   return (
-    <div className="mx-4 mb-2 rounded-xl border border-border bg-surface p-3.5 shadow-card">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-fg">
-            <Download className="size-4 text-accent" />
+    <aside
+      aria-label="Install RACK"
+      className={`fixed left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-sm z-30 transition-all ${
+        hasNav
+          ? "bottom-[calc(3.75rem+env(safe-area-inset-bottom)+0.5rem)]"
+          : "bottom-3"
+      }`}
+    >
+      <div className="rounded-xl border border-border/90 bg-surface/95 backdrop-blur-md p-2.5 shadow-2xl shadow-black/60">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-accent">
+              <Download className="size-3.5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-fg leading-none truncate">Install RACK</p>
+              <p className="text-[10px] text-muted truncate mt-0.5">Works offline on gym floor</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-semibold text-fg">Install RACK App</p>
-            <p className="text-xs text-muted">Use offline on gym floor with zero lag</p>
-          </div>
-        </div>
-        <button
-          type="button"
-          aria-label="Dismiss banner"
-          onClick={() => setDismissed(true)}
-          className="text-subtle hover:text-muted"
-        >
-          <X className="size-4" />
-        </button>
-      </div>
 
-      {showIOSPrompt ? (
-        <div className="mt-3 rounded-lg bg-surface-2 p-2.5 text-xs text-fg">
-          <p className="flex items-center gap-1.5 font-medium">
-            <Share2 className="size-3.5 text-accent" /> Tap <span className="font-semibold">Share</span> in Safari
-          </p>
-          <p className="mt-1 text-muted">Then select <span className="text-fg font-medium">&quot;Add to Home Screen&quot;</span> to install.</p>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Button size="sm" className="h-7 px-2.5 text-[11px]" onClick={handleInstallClick}>
+              Install
+            </Button>
+            <button
+              type="button"
+              aria-label="Dismiss banner"
+              onClick={handleDismiss}
+              className="flex size-7 items-center justify-center rounded text-subtle hover:text-fg"
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
         </div>
-      ) : (
-        <div className="mt-3 flex gap-2">
-          <Button size="sm" className="flex-1" onClick={handleInstallClick}>
-            Install App
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => setDismissed(true)}>
-            Not now
-          </Button>
-        </div>
-      )}
-    </div>
+
+        {showIOSPrompt && (
+          <div className="mt-2 rounded-lg bg-surface-2 p-2 text-[11px] text-fg border border-border/50">
+            <p className="flex items-center gap-1 font-medium">
+              <Share2 className="size-3 text-accent" /> Tap <span className="font-semibold">Share</span> in Safari
+            </p>
+            <p className="mt-0.5 text-[10px] text-muted">
+              Select <span className="text-fg font-medium">&quot;Add to Home Screen&quot;</span>.
+            </p>
+          </div>
+        )}
+      </div>
+    </aside>
   );
 }

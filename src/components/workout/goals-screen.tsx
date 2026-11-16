@@ -93,23 +93,23 @@ export function GoalsScreen() {
 
   return (
     <AppShell nav>
-      <header className="flex items-center justify-between px-5 pt-6 pb-2">
+      <header className="flex items-center justify-between px-4 pt-2.5 pb-1">
         <AppHeaderTitle />
-        <span className="text-xs font-medium uppercase tracking-widest text-subtle">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-subtle">
           Goals
         </span>
       </header>
 
-      <main className="flex-1 px-5 pb-10">
-        <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight text-fg">
+      <main className="flex-1 px-4 pb-4">
+        <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-fg">
           The chase
         </h1>
-        <p className="mt-2 text-sm text-muted">
-          One overall aim, a body-weight target, and numbers for the lifts you care about.
+        <p className="mt-0.5 text-xs text-muted">
+          Aim, body-weight target, and numbers for your lifts.
         </p>
 
         {/* Overall Goal Card */}
-        <section className="mt-6 rounded-xl bg-surface p-4 shadow-card">
+        <section className="mt-2.5 rounded-xl bg-surface p-3 shadow-card">
           <Field label="Overall goal">
             <Textarea
               value={noteInput}
@@ -121,21 +121,21 @@ export function GoalsScreen() {
         </section>
 
         {/* Body Weight Goal Card */}
-        <section className="mt-4 rounded-xl bg-surface p-4 shadow-card">
-          <p className="text-xs font-medium uppercase tracking-widest text-subtle">
+        <section className="mt-2.5 rounded-xl bg-surface p-3 shadow-card">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-subtle">
             Body weight
           </p>
-          <p className="mt-2 font-display text-3xl font-semibold tabular-nums text-fg">
+          <p className="mt-0.5 font-display text-2xl font-bold tabular-nums text-fg leading-none">
             {latestWeight ? `${formatKg(latestWeight.kg)} kg` : "Log your weight"}
           </p>
           {weightGoalProgress != null && (
-            <p className="mt-1 text-sm text-muted">
+            <p className="mt-1 text-xs text-muted font-medium">
               {Math.round(weightGoalProgress)}% of the way to{" "}
               {formatKg(goals.bodyWeightKg ?? 0)} kg
             </p>
           )}
 
-          <div className="mt-4 grid grid-cols-2 gap-2">
+          <div className="mt-2.5 grid grid-cols-2 gap-2">
             <Field label="Log now">
               <Input
                 type="number"
@@ -163,14 +163,15 @@ export function GoalsScreen() {
           </div>
 
           <Button
-            className="mt-3 w-full"
+            size="sm"
+            className="mt-2.5 w-full"
             onClick={handleLogWeight}
             disabled={!weightInput}
           >
             Log weight
           </Button>
 
-          <div className="-mx-2 mt-3">
+          <div className="-mx-1 mt-2.5">
             <TrendLineChart
               data={weightTrend}
               unit="kg"
@@ -180,18 +181,18 @@ export function GoalsScreen() {
 
           {bodyWeight.length > 0 && (
             <ul className="mt-2 divide-y divide-border">
-              {bodyWeight.slice(0, 6).map((entry) => (
+              {bodyWeight.slice(0, 5).map((entry) => (
                 <li
                   key={entry.id}
-                  className="flex h-11 items-center justify-between text-sm"
+                  className="flex h-9 items-center justify-between text-xs"
                 >
                   <span className="text-muted">{formatDate(entry.at)}</span>
-                  <span className="tabular-nums text-fg">
+                  <span className="tabular-nums font-semibold text-fg">
                     {formatKg(entry.kg)} kg
                   </span>
                   <button
                     type="button"
-                    className="text-xs text-subtle hover:text-miss"
+                    className="text-[11px] text-subtle hover:text-miss"
                     onClick={() => removeBodyWeight(entry.id)}
                   >
                     Remove
@@ -203,13 +204,12 @@ export function GoalsScreen() {
         </section>
 
         {/* Lift Targets Section */}
-        <section className="mt-4">
-          <h2 className="text-sm font-medium text-fg">Lift targets</h2>
-          <p className="mt-1 text-xs text-muted">
-            Weight, reps, and sets you are chasing on a lift.
-          </p>
+        <section className="mt-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-subtle">
+            Lift targets
+          </h2>
 
-          <div className="mt-3 space-y-3">
+          <div className="mt-2 space-y-2">
             {goals.lifts.map((goal) => {
               const ex = exercises.find((e) => e.id === goal.exerciseId);
               const last = exerciseLastSession(sessions, goal.exerciseId);
@@ -225,15 +225,15 @@ export function GoalsScreen() {
               return (
                 <article
                   key={goal.exerciseId}
-                  className="rounded-xl bg-surface p-4 shadow-card"
+                  className="rounded-xl bg-surface p-3 shadow-card"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-medium text-fg">
+                    <p className="text-xs font-semibold text-fg">
                       {ex?.name ?? "Removed lift"}
                     </p>
                     <button
                       type="button"
-                      className="h-11 text-xs text-miss hover:text-miss/80"
+                      className="h-7 text-xs text-miss hover:text-miss/80"
                       onClick={() => removeLiftGoal(goal.exerciseId)}
                     >
                       Remove
@@ -241,17 +241,17 @@ export function GoalsScreen() {
                   </div>
 
                   {last ? (
-                    <p className="mt-1 text-xs text-muted">
+                    <p className="mt-0.5 text-[11px] text-muted">
                       Last {formatKg(last.weightKg)}×{last.reps} · {last.sets} sets
                       {prog == null ? "" : ` · ${Math.round(prog)}% to goal kg`}
                     </p>
                   ) : (
-                    <p className="mt-1 text-xs text-subtle">
+                    <p className="mt-0.5 text-[11px] text-subtle">
                       No logged sets yet
                     </p>
                   )}
 
-                  <div className="mt-3 grid grid-cols-3 gap-2">
+                  <div className="mt-2 grid grid-cols-3 gap-1.5">
                     <Field label="kg">
                       <Input
                         type="number"
@@ -311,7 +311,7 @@ export function GoalsScreen() {
           </div>
 
           {availableLifts.length > 0 ? (
-            <div className="mt-3 flex gap-2">
+            <div className="mt-2.5 flex gap-2">
               <Select
                 value={liftToAdd}
                 onChange={(e) => setSelectedLiftToAdd(e.target.value)}
@@ -322,12 +322,12 @@ export function GoalsScreen() {
                   </option>
                 ))}
               </Select>
-              <Button variant="secondary" onClick={handleAddLiftGoal}>
+              <Button size="sm" variant="secondary" onClick={handleAddLiftGoal}>
                 Add
               </Button>
             </div>
           ) : (
-            <p className="mt-3 text-xs text-subtle">
+            <p className="mt-2 text-[11px] text-subtle">
               Add lifts in Program first, then target them here.
             </p>
           )}
