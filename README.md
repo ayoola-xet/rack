@@ -2,7 +2,7 @@
 
 Gym log for a split you actually own. Set the days, log set by set, see what you owe, and drop a session you logged by mistake.
 
-Live: [rackbro.grok.me](https://rackbro.grok.me)
+Live: [rackbro.vercel.app](https://rackbro.vercel.app)
 
 ## Features
 
