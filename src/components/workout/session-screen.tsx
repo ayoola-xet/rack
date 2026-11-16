@@ -791,7 +791,7 @@ function TimerSettingsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-xs">
-      <div className="w-full max-w-md rounded-t-2xl border-t border-border bg-surface p-4 shadow-2xl">
+      <div className="w-full max-w-md rounded-t-2xl border-t border-border bg-surface p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl">
         <div className="flex items-center justify-between pb-2.5 border-b border-border">
           <div className="flex items-center gap-1.5">
             <Settings className="size-4 text-accent" />

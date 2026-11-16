@@ -38,7 +38,7 @@ export function AppShell({
   return (
     <div
       className={cn(
-        "mx-auto flex min-h-dvh w-full max-w-md flex-col bg-bg pb-[env(safe-area-inset-bottom)]",
+        "mx-auto flex min-h-dvh w-full max-w-md flex-col bg-bg pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]",
         className,
       )}
     >

@@ -19,7 +19,7 @@ export function Field({
 }
 
 const controlClass =
-  "h-9 sm:h-10 w-full rounded-lg bg-surface-2 px-3 text-xs sm:text-sm text-fg shadow-card outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring/70";
+  "h-10 w-full rounded-lg bg-surface-2 px-3 text-base text-fg shadow-card outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring/70";
 
 export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return <input className={cn(controlClass, className)} {...props} />;
