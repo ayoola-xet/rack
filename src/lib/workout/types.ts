@@ -12,6 +12,7 @@ export type ExerciseDef = {
   maxSets: number;
   minReps: number;
   load: LoadTarget;
+  supersetId?: string | null;
 };
 
 export type ProgramDay = {
@@ -38,6 +39,7 @@ export type Session = {
   logs: Record<string, LoggedSet[]>;
   customExercises?: ExerciseDef[];
   title?: string;
+  supersets?: Record<string, string>;
 };
 
 export type BodyWeightLog = {

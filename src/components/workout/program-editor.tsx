@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Link2, Plus, Trash2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import {
@@ -11,6 +11,7 @@ import { useWorkoutStore } from "@/lib/workout/store";
 import type { ExerciseDef } from "@/lib/workout/types";
 import { AppShell, BackLink } from "./shell";
 import { ExercisePickerModal } from "./exercise-picker-modal";
+import { SupersetModal } from "./superset-modal";
 
 export function ProgramEditor({ dayId }: { dayId: string }) {
   const navigate = useNavigate();
@@ -21,8 +22,11 @@ export function ProgramEditor({ dayId }: { dayId: string }) {
   const updateExercise = useWorkoutStore((s) => s.updateExercise);
   const removeExercise = useWorkoutStore((s) => s.removeExercise);
   const moveExercise = useWorkoutStore((s) => s.moveExercise);
+  const linkProgramSuperset = useWorkoutStore((s) => s.linkProgramSuperset);
+  const unlinkProgramSuperset = useWorkoutStore((s) => s.unlinkProgramSuperset);
 
   const [showPicker, setShowPicker] = useState(false);
+  const [selectedForSuperset, setSelectedForSuperset] = useState<ExerciseDef | null>(null);
 
   const day = programs.find((p) => p.id === dayId);
 
@@ -133,6 +137,7 @@ export function ProgramEditor({ dayId }: { dayId: string }) {
                 onChange={(patch) => updateExercise(dayId, ex.id, patch)}
                 onRemove={() => removeExercise(dayId, ex.id)}
                 onMove={(delta) => moveExercise(dayId, ex.id, delta)}
+                onManageSuperset={() => setSelectedForSuperset(ex)}
               />
             ))}
           </div>
@@ -151,11 +156,31 @@ export function ProgramEditor({ dayId }: { dayId: string }) {
         )}
       </main>
 
+      {/* Exercise Picker Modal */}
       <ExercisePickerModal
         isOpen={showPicker}
         onClose={() => setShowPicker(false)}
         onSelect={(exercise) => addExercise(dayId, exercise)}
       />
+
+      {/* Superset Modal */}
+      {selectedForSuperset && (
+        <SupersetModal
+          isOpen={true}
+          currentExercise={selectedForSuperset}
+          allExercises={day.exercises}
+          currentSupersetId={selectedForSuperset.supersetId ?? null}
+          onClose={() => setSelectedForSuperset(null)}
+          onLink={(ids) => {
+            linkProgramSuperset(dayId, ids);
+            setSelectedForSuperset(null);
+          }}
+          onUnlink={(id) => {
+            unlinkProgramSuperset(dayId, id);
+            setSelectedForSuperset(null);
+          }}
+        />
+      )}
 
       <datalist id="rack-groups">
         {GROUP_SUGGESTIONS.map((g) => (
@@ -173,6 +198,7 @@ function ExerciseEditorCard({
   onChange,
   onRemove,
   onMove,
+  onManageSuperset,
 }: {
   exercise: ExerciseDef;
   isFirst: boolean;
@@ -180,6 +206,7 @@ function ExerciseEditorCard({
   onChange: (patch: Partial<ExerciseDef>) => void;
   onRemove: () => void;
   onMove: (delta: number) => void;
+  onManageSuperset: () => void;
 }) {
   const loadKind = exercise.load.kind;
 
@@ -240,14 +267,38 @@ function ExerciseEditorCard({
         </button>
       </div>
 
-      <Field className="mt-2" label="Muscle Group">
-        <Input
-          list="rack-groups"
-          value={exercise.group}
-          placeholder="e.g. Chest, Back, Legs..."
-          onChange={(e) => onChange({ group: e.target.value })}
-        />
-      </Field>
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <div className="flex-1">
+          <Input
+            list="rack-groups"
+            value={exercise.group}
+            placeholder="Muscle (e.g. Chest, Back)"
+            onChange={(e) => onChange({ group: e.target.value })}
+            className="h-8 text-xs"
+          />
+        </div>
+
+        {/* Superset Button */}
+        {exercise.supersetId ? (
+          <button
+            type="button"
+            onClick={onManageSuperset}
+            className="flex items-center gap-1 rounded-md bg-purple-950/60 border border-purple-500/40 px-2 py-1 text-[11px] font-bold text-purple-300 hover:bg-purple-900/60"
+          >
+            <Zap className="size-3 text-purple-400 fill-current" />
+            <span>Superset {exercise.supersetId}</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onManageSuperset}
+            className="flex items-center gap-1 rounded-md bg-surface-2 px-2 py-1 text-[11px] font-semibold text-muted hover:text-fg"
+          >
+            <Link2 className="size-3" />
+            <span>+ Superset</span>
+          </button>
+        )}
+      </div>
 
       <div className="mt-2 grid grid-cols-3 gap-1.5">
         <Field label="Min sets">

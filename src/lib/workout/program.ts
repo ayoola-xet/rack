@@ -317,6 +317,43 @@ export function allExercises(programs: ProgramDay[]): ExerciseDef[] {
   return list;
 }
 
+export function getExerciseSupersetId(
+  exercise: ExerciseDef,
+  session?: Session | null
+): string | null {
+  if (session?.supersets && session.supersets[exercise.id]) {
+    return session.supersets[exercise.id];
+  }
+  return exercise.supersetId ?? null;
+}
+
+export function getSupersetExercises(
+  allExercises: ExerciseDef[],
+  supersetId: string,
+  session?: Session | null
+): ExerciseDef[] {
+  if (!supersetId) return [];
+  return allExercises.filter(
+    (e) => getExerciseSupersetId(e, session) === supersetId
+  );
+}
+
+export function getNextSupersetLabel(
+  allExercises: ExerciseDef[],
+  session?: Session | null
+): string {
+  const existing = new Set<string>();
+  for (const ex of allExercises) {
+    const sId = getExerciseSupersetId(ex, session);
+    if (sId) existing.add(sId);
+  }
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  for (const char of alphabet) {
+    if (!existing.has(char)) return char;
+  }
+  return `SS${existing.size + 1}`;
+}
+
 export function buildCue(exercise: Pick<ExerciseDef, "load" | "minReps">): string {
   if (exercise.load.kind === "bar") {
     return `${exercise.load.kg} kg · at least ${exercise.minReps} reps`;

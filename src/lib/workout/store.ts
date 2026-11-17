@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
   ensureTuesday,
+  getNextSupersetLabel,
   newExercise,
   nextWeekday,
   programById,
@@ -54,6 +55,10 @@ export type WorkoutState = {
   updateSet: (exerciseId: string, setId: string, patch: Partial<LoggedSet>) => void;
   deleteSet: (exerciseId: string, setId: string) => void;
   undoLastSet: () => void;
+  linkSupersetInSession: (exerciseIds: string[], supersetLabel?: string) => void;
+  unlinkSupersetInSession: (exerciseId: string) => void;
+  linkProgramSuperset: (dayId: string, exerciseIds: string[], supersetLabel?: string) => void;
+  unlinkProgramSuperset: (dayId: string, exerciseId: string) => void;
   loadSplitTemplate: (templateKey: "ppl" | "upper_lower" | "full_body") => void;
   startRest: (durationMs?: number) => void;
   addRestTime: (ms: number) => void;
@@ -343,6 +348,97 @@ export const useWorkoutStore = create<WorkoutState>()(
         set({
           programs: structuredClone(found.days) as ProgramDay[],
         });
+      },
+
+      linkSupersetInSession: (exerciseIds: string[], supersetLabel?: string) => {
+        const session = selectActiveSession(get());
+        if (!session || exerciseIds.length < 2) return;
+
+        const allEx = sessionExercises(session, get().programs);
+        const label = supersetLabel || getNextSupersetLabel(allEx, session);
+
+        set((state) => ({
+          sessions: updateSessionInList(state.sessions, session.id, (s) => {
+            const nextMap = { ...(s.supersets ?? {}) };
+            for (const id of exerciseIds) {
+              nextMap[id] = label;
+            }
+            return {
+              ...s,
+              supersets: nextMap,
+            };
+          }),
+        }));
+      },
+
+      unlinkSupersetInSession: (exerciseId: string) => {
+        const session = selectActiveSession(get());
+        if (!session) return;
+
+        set((state) => ({
+          sessions: updateSessionInList(state.sessions, session.id, (s) => {
+            const nextMap = { ...(s.supersets ?? {}) };
+            const oldLabel = nextMap[exerciseId];
+            delete nextMap[exerciseId];
+
+            if (oldLabel) {
+              const remaining = Object.entries(nextMap).filter(([, l]) => l === oldLabel);
+              if (remaining.length === 1) {
+                delete nextMap[remaining[0][0]];
+              }
+            }
+
+            return {
+              ...s,
+              supersets: nextMap,
+            };
+          }),
+        }));
+      },
+
+      linkProgramSuperset: (dayId: string, exerciseIds: string[], supersetLabel?: string) => {
+        const day = programById(get().programs, dayId);
+        if (!day) return;
+        const label = supersetLabel || getNextSupersetLabel(day.exercises);
+
+        set((state) => ({
+          programs: updateProgramInList(state.programs, dayId, (p) => ({
+            ...p,
+            exercises: p.exercises.map((e) =>
+              exerciseIds.includes(e.id) ? { ...e, supersetId: label } : e
+            ),
+          })),
+        }));
+      },
+
+      unlinkProgramSuperset: (dayId: string, exerciseId: string) => {
+        const day = programById(get().programs, dayId);
+        if (!day) return;
+        const currentExercise = day.exercises.find((e) => e.id === exerciseId);
+        const oldLabel = currentExercise?.supersetId;
+
+        set((state) => ({
+          programs: updateProgramInList(state.programs, dayId, (p) => {
+            const updated = p.exercises.map((e) =>
+              e.id === exerciseId ? { ...e, supersetId: null } : e
+            );
+            if (oldLabel) {
+              const remaining = updated.filter((e) => e.supersetId === oldLabel);
+              if (remaining.length === 1) {
+                return {
+                  ...p,
+                  exercises: updated.map((e) =>
+                    e.supersetId === oldLabel ? { ...e, supersetId: null } : e
+                  ),
+                };
+              }
+            }
+            return {
+              ...p,
+              exercises: updated,
+            };
+          }),
+        }));
       },
 
       startRest: (durationMs?: number) => {

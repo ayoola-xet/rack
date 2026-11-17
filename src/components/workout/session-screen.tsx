@@ -5,6 +5,7 @@ import {
   Check,
   ChevronRight,
   Flame,
+  Link2,
   Minus,
   Pencil,
   Plus,
@@ -12,6 +13,7 @@ import {
   Trash2,
   Undo2,
   X,
+  Zap,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +25,8 @@ import {
 } from "@/lib/workout/audio-alarm";
 import {
   defaultWeightKg,
+  getExerciseSupersetId,
+  getSupersetExercises,
   prescribedWeightLabel,
   programById,
   sessionExercises,
@@ -47,6 +51,7 @@ import { AppShell } from "./shell";
 import { ExercisePickerModal } from "./exercise-picker-modal";
 import { PlateCalculatorModal } from "./plate-calculator-modal";
 import { WorkoutFinishedModal } from "./workout-finished-modal";
+import { SupersetModal } from "./superset-modal";
 
 export function SessionScreen() {
   const navigate = useNavigate();
@@ -69,11 +74,14 @@ export function SessionScreen() {
   const updateTimerSettings = useWorkoutStore((s) => s.updateTimerSettings);
   const addExerciseToActiveSession = useWorkoutStore((s) => s.addExerciseToActiveSession);
   const removeExerciseFromActiveSession = useWorkoutStore((s) => s.removeExerciseFromActiveSession);
+  const linkSupersetInSession = useWorkoutStore((s) => s.linkSupersetInSession);
+  const unlinkSupersetInSession = useWorkoutStore((s) => s.unlinkSupersetInSession);
 
   const [showSettings, setShowSettings] = useState(false);
   const [showAddExercise, setShowAddExercise] = useState(false);
   const [showPlateCalc, setShowPlateCalc] = useState(false);
   const [showFinishedModal, setShowFinishedModal] = useState(false);
+  const [showSupersetModal, setShowSupersetModal] = useState(false);
   const [editingSet, setEditingSet] = useState<{ exerciseId: string; set: LoggedSet } | null>(null);
 
   // If no session running
@@ -156,6 +164,21 @@ export function SessionScreen() {
   const prevSets = prevSession?.logs[activeExercise.id] ?? [];
   const exercisePR = findExercisePR(allSessions, activeExercise.id);
 
+  // Superset calculations
+  const activeSupersetId = getExerciseSupersetId(activeExercise, session);
+  const supersetExercises = activeSupersetId
+    ? getSupersetExercises(exercises, activeSupersetId, session)
+    : [];
+  const activeSupersetIdx = supersetExercises.findIndex((e) => e.id === activeExercise.id);
+  const isLastInSuperset =
+    supersetExercises.length > 0 && activeSupersetIdx === supersetExercises.length - 1;
+  const nextInSuperset =
+    supersetExercises.length > 0
+      ? isLastInSuperset
+        ? supersetExercises[0]
+        : supersetExercises[activeSupersetIdx + 1]
+      : null;
+
   const handleNextExercise = () => {
     const nextEx = exercises[activeIdx + 1];
     if (nextEx) {
@@ -200,6 +223,11 @@ export function SessionScreen() {
           </p>
           <p className="text-[10px] text-muted truncate mt-0.5">
             {activeExercise.group || "Lifts"} · {activeIdx + 1}/{exercises.length}
+            {activeSupersetId && (
+              <span className="ml-1 text-purple-400 font-semibold">
+                · Superset {activeSupersetId} ({activeSupersetIdx + 1}/{supersetExercises.length})
+              </span>
+            )}
           </p>
         </div>
 
@@ -237,13 +265,17 @@ export function SessionScreen() {
         </button>
       </header>
 
-      {/* Exercise Switcher Navigation Strip */}
+      {/* Exercise Switcher Navigation Strip with Superset Grouping */}
       <div className="pt-1.5 pb-1 shrink-0 border-b border-border/30 bg-bg/50">
         <div className="flex items-center gap-1 overflow-x-auto px-3 scrollbar-none">
           {exercises.map((ex, idx) => {
             const isDone = (session.logs[ex.id]?.length ?? 0) >= ex.minSets;
             const hasLogs = (session.logs[ex.id]?.length ?? 0) > 0;
             const isActive = ex.id === activeExercise.id;
+            const sId = getExerciseSupersetId(ex, session);
+            const sGroup = sId ? getSupersetExercises(exercises, sId, session) : [];
+            const sIdx = sGroup.findIndex((e) => e.id === ex.id);
+            const label = sId ? `${sId}${sIdx + 1}` : `${idx + 1}`;
 
             return (
               <button
@@ -253,16 +285,22 @@ export function SessionScreen() {
                 className={cn(
                   "flex h-7 shrink-0 items-center gap-1 rounded-lg px-2 text-[11px] font-bold tabular-nums transition-colors",
                   isActive
-                    ? "bg-primary text-primary-fg shadow-xs"
-                    : isDone
-                      ? "bg-surface text-hit shadow-card"
-                      : hasLogs
-                        ? "bg-surface text-fg shadow-card"
-                        : "bg-surface text-subtle shadow-card hover:text-muted",
+                    ? sId
+                      ? "bg-purple-600 text-white shadow-xs border border-purple-400"
+                      : "bg-primary text-primary-fg shadow-xs"
+                    : sId
+                      ? isDone
+                        ? "bg-purple-950/60 text-hit border border-purple-500/50"
+                        : "bg-purple-950/40 text-purple-200 border border-purple-500/30"
+                      : isDone
+                        ? "bg-surface text-hit shadow-card"
+                        : hasLogs
+                          ? "bg-surface text-fg shadow-card"
+                          : "bg-surface text-subtle shadow-card hover:text-muted",
                 )}
               >
-                <span>{idx + 1}.</span>
-                <span className="max-w-[80px] truncate">{ex.name.split(" ")[0]}</span>
+                <span>{label}.</span>
+                <span className="max-w-[75px] truncate">{ex.name.split(" ")[0]}</span>
                 {isDone && <Check className="size-3 shrink-0" />}
               </button>
             );
@@ -285,10 +323,34 @@ export function SessionScreen() {
         <div className="rounded-xl bg-surface p-3 shadow-card">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <span className="rounded-md bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent">
-                {activeExercise.group || "Lift"}
-              </span>
-              <h1 className="mt-1 font-display text-xl font-bold text-fg leading-none">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="rounded-md bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent">
+                  {activeExercise.group || "Lift"}
+                </span>
+
+                {/* Superset Badge / Action Button */}
+                {activeSupersetId ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowSupersetModal(true)}
+                    className="flex items-center gap-1 rounded-md bg-purple-950/60 border border-purple-500/40 px-2 py-0.5 text-[10px] font-bold text-purple-300 hover:bg-purple-900/60 transition-colors"
+                  >
+                    <Zap className="size-3 text-purple-400 fill-current" />
+                    <span>Superset {activeSupersetId} ({activeSupersetIdx + 1}/{supersetExercises.length})</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowSupersetModal(true)}
+                    className="flex items-center gap-1 rounded-md bg-surface-2 border border-border/80 px-2 py-0.5 text-[10px] font-semibold text-muted hover:text-fg hover:bg-surface-2/80 transition-colors"
+                  >
+                    <Link2 className="size-3" />
+                    <span>+ Superset</span>
+                  </button>
+                )}
+              </div>
+
+              <h1 className="mt-1.5 font-display text-xl font-bold text-fg leading-none">
                 {activeExercise.name}
               </h1>
               <p className="mt-1 text-xs text-muted">
@@ -309,7 +371,7 @@ export function SessionScreen() {
           {prevSets.length > 0 && (
             <div className="mt-2.5 pt-2 border-t border-border/40 text-[11px] text-subtle">
               <span className="font-semibold text-muted">Last workout: </span>
-              {prevSets.map((s, i) => `${formatKg(s.weightKg)}kg×${s.reps}`).join("  ·  ")}
+              {prevSets.map((s) => `${formatKg(s.weightKg)}kg×${s.reps}`).join("  ·  ")}
             </div>
           )}
         </div>
@@ -328,7 +390,6 @@ export function SessionScreen() {
             <div className="divide-y divide-border/30">
               {loggedSets.map((set, idx) => {
                 const prev = prevSets[idx];
-                const isPR = set.weightKg > exercisePR && exercisePR > 0;
                 const meets = setMeetsTarget(activeExercise, set);
 
                 return (
@@ -385,11 +446,16 @@ export function SessionScreen() {
         timerTotalMs={timerTotalMs}
         timerSettings={timerSettings}
         isLastLift={isLastLift}
+        activeSupersetId={activeSupersetId}
+        supersetExercises={supersetExercises}
+        isLastInSuperset={isLastInSuperset}
+        nextInSuperset={nextInSuperset}
         onLog={logSet}
         onSkipRest={skipRest}
         onAddRestTime={addRestTime}
         onStartRest={startRest}
         onNext={handleNextExercise}
+        onSwitchExercise={setActiveExercise}
         onOpenPlateCalc={() => setShowPlateCalc(true)}
       />
 
@@ -405,6 +471,17 @@ export function SessionScreen() {
         isOpen={showAddExercise}
         onClose={() => setShowAddExercise(false)}
         onSelect={(ex) => addExerciseToActiveSession(ex)}
+      />
+
+      {/* Superset Link Modal */}
+      <SupersetModal
+        isOpen={showSupersetModal}
+        currentExercise={activeExercise}
+        allExercises={exercises}
+        currentSupersetId={activeSupersetId}
+        onClose={() => setShowSupersetModal(false)}
+        onLink={(ids) => linkSupersetInSession(ids)}
+        onUnlink={(id) => unlinkSupersetInSession(id)}
       />
 
       {/* Edit Set Modal */}
@@ -482,11 +559,16 @@ function SessionFooter({
   timerTotalMs,
   timerSettings,
   isLastLift,
+  activeSupersetId,
+  supersetExercises,
+  isLastInSuperset,
+  nextInSuperset,
   onLog,
   onSkipRest,
   onAddRestTime,
   onStartRest,
   onNext,
+  onSwitchExercise,
   onOpenPlateCalc,
 }: {
   exercise: ExerciseDef;
@@ -497,11 +579,16 @@ function SessionFooter({
   timerTotalMs: number;
   timerSettings: typeof useWorkoutStore.getState.prototype.timerSettings;
   isLastLift: boolean;
+  activeSupersetId: string | null;
+  supersetExercises: ExerciseDef[];
+  isLastInSuperset: boolean;
+  nextInSuperset: ExerciseDef | null;
   onLog: (reps: number, weightKg: number) => void;
   onSkipRest: () => void;
   onAddRestTime: (ms: number) => void;
   onStartRest: (ms?: number) => void;
   onNext: () => void;
+  onSwitchExercise: (id: string) => void;
   onOpenPlateCalc: () => void;
 }) {
   const defaultWt = lastWeight ?? sets[sets.length - 1]?.weightKg ?? prevSets[sets.length]?.weightKg ?? defaultWeightKg(exercise);
@@ -529,6 +616,8 @@ function SessionFooter({
     setRepsInput(String(next));
   };
 
+  const isSuperset = !!activeSupersetId && supersetExercises.length > 1;
+
   const handleLogSet = () => {
     const wt = Number(weightInput);
     const rp = Number(repsInput);
@@ -537,9 +626,28 @@ function SessionFooter({
     soundAlarm.unlockAudio();
     onLog(rp, wt);
     soundAlarm.vibrate(25);
+
+    // Superset flow
+    if (isSuperset && nextInSuperset) {
+      if (!isLastInSuperset) {
+        // Switch to next lift immediately in superset (no rest)
+        onSkipRest();
+        onSwitchExercise(nextInSuperset.id);
+      } else {
+        // Last lift in superset round: start full rest timer and switch to first lift
+        onStartRest();
+        onSwitchExercise(supersetExercises[0].id);
+      }
+    }
   };
 
   const nextLabel = isLastLift ? "Finish workout" : "Next lift";
+
+  const buttonLabel = isSuperset
+    ? !isLastInSuperset && nextInSuperset
+      ? `Log & Next: ${nextInSuperset.name.split(" ")[0]} ➔`
+      : `Log Round & Rest ⏱️`
+    : `Log Set ${sets.length + 1}`;
 
   return (
     <footer className="shrink-0 border-t border-border bg-surface px-3.5 pt-2 pb-3 shadow-lg">
@@ -668,11 +776,18 @@ function SessionFooter({
       <div className="mt-2.5 flex items-center gap-2">
         <Button
           size="lg"
-          className="flex-1 font-bold text-sm shadow-md"
+          className={cn(
+            "flex-1 font-bold text-sm shadow-md",
+            isSuperset && "bg-purple-600 hover:bg-purple-500 text-white",
+          )}
           onClick={handleLogSet}
         >
-          <Check className="size-4" strokeWidth={2.5} />
-          Log Set {sets.length + 1}
+          {isSuperset ? (
+            <Zap className="size-4 fill-current text-purple-200" />
+          ) : (
+            <Check className="size-4" strokeWidth={2.5} />
+          )}
+          {buttonLabel}
         </Button>
 
         <Button
