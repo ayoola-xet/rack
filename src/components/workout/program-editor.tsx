@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import {
 import { useWorkoutStore } from "@/lib/workout/store";
 import type { ExerciseDef } from "@/lib/workout/types";
 import { AppShell, BackLink } from "./shell";
+import { ExercisePickerModal } from "./exercise-picker-modal";
 
 export function ProgramEditor({ dayId }: { dayId: string }) {
   const navigate = useNavigate();
@@ -20,6 +22,8 @@ export function ProgramEditor({ dayId }: { dayId: string }) {
   const removeExercise = useWorkoutStore((s) => s.removeExercise);
   const moveExercise = useWorkoutStore((s) => s.moveExercise);
 
+  const [showPicker, setShowPicker] = useState(false);
+
   const day = programs.find((p) => p.id === dayId);
 
   if (!day) {
@@ -28,7 +32,7 @@ export function ProgramEditor({ dayId }: { dayId: string }) {
         <header className="flex items-center px-3 pt-2.5">
           <BackLink to="/programs" label="Back" />
         </header>
-        <p className="px-4 pt-4 text-xs text-muted">That day is gone.</p>
+        <p className="px-4 pt-4 text-xs text-muted">That day does not exist.</p>
       </AppShell>
     );
   }
@@ -74,56 +78,84 @@ export function ProgramEditor({ dayId }: { dayId: string }) {
             </Select>
           </Field>
 
-          <Field label="Split">
+          <Field label="Split Name">
             <Input
               value={day.split}
-              placeholder="Back & Shoulders"
+              placeholder="e.g. Chest & Triceps"
               onChange={(e) => updateDay(dayId, { split: e.target.value })}
             />
           </Field>
         </div>
 
-        <Field className="mt-2" label="Note">
+        <Field className="mt-2" label="Focus / Note">
           <Textarea
             value={day.blurb}
-            placeholder="Focus cue for the day..."
+            placeholder="Focus cue or notes for the day..."
             onChange={(e) => updateDay(dayId, { blurb: e.target.value })}
           />
         </Field>
 
-        <h2 className="mt-3.5 text-xs font-semibold uppercase tracking-wider text-subtle">
-          Lifts in order
-        </h2>
-        {day.exercises.length === 0 && (
-          <p className="mt-1 text-xs text-muted">
-            Add pull-ups, rows, curls — whatever your {day.weekday} is.
-          </p>
-        )}
-
-        <div className="mt-2 space-y-2">
-          {day.exercises.map((ex, idx) => (
-            <ExerciseEditorCard
-              key={ex.id}
-              exercise={ex}
-              isFirst={idx === 0}
-              isLast={idx === day.exercises.length - 1}
-              onChange={(patch) => updateExercise(dayId, ex.id, patch)}
-              onRemove={() => removeExercise(dayId, ex.id)}
-              onMove={(delta) => moveExercise(dayId, ex.id, delta)}
-            />
-          ))}
+        <div className="mt-4 flex items-center justify-between">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-subtle">
+            Lifts in Routine ({day.exercises.length})
+          </h2>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setShowPicker(true)}
+            className="text-xs font-semibold"
+          >
+            <Plus className="size-3.5" />
+            Add Lift
+          </Button>
         </div>
 
-        <Button
-          className="mt-3"
-          size="lg"
-          variant="secondary"
-          onClick={() => addExercise(dayId)}
-        >
-          <Plus className="size-4" />
-          Add a lift
-        </Button>
+        {day.exercises.length === 0 ? (
+          <div className="mt-3 rounded-xl border border-dashed border-border p-6 text-center">
+            <p className="text-xs text-muted">No lifts in this routine yet.</p>
+            <Button
+              className="mt-3 font-semibold"
+              size="md"
+              onClick={() => setShowPicker(true)}
+            >
+              <Plus className="size-4" />
+              Add Exercise from Library
+            </Button>
+          </div>
+        ) : (
+          <div className="mt-2.5 space-y-2">
+            {day.exercises.map((ex, idx) => (
+              <ExerciseEditorCard
+                key={ex.id}
+                exercise={ex}
+                isFirst={idx === 0}
+                isLast={idx === day.exercises.length - 1}
+                onChange={(patch) => updateExercise(dayId, ex.id, patch)}
+                onRemove={() => removeExercise(dayId, ex.id)}
+                onMove={(delta) => moveExercise(dayId, ex.id, delta)}
+              />
+            ))}
+          </div>
+        )}
+
+        {day.exercises.length > 0 && (
+          <Button
+            className="mt-3.5 w-full"
+            size="lg"
+            variant="secondary"
+            onClick={() => setShowPicker(true)}
+          >
+            <Plus className="size-4" />
+            Add Another Lift
+          </Button>
+        )}
       </main>
+
+      <ExercisePickerModal
+        isOpen={showPicker}
+        onClose={() => setShowPicker(false)}
+        onSelect={(exercise) => addExercise(dayId, exercise)}
+      />
 
       <datalist id="rack-groups">
         {GROUP_SUGGESTIONS.map((g) => (
@@ -208,11 +240,11 @@ function ExerciseEditorCard({
         </button>
       </div>
 
-      <Field className="mt-2" label="Muscle">
+      <Field className="mt-2" label="Muscle Group">
         <Input
           list="rack-groups"
           value={exercise.group}
-          placeholder="Shoulders"
+          placeholder="e.g. Chest, Back, Legs..."
           onChange={(e) => onChange({ group: e.target.value })}
         />
       </Field>
@@ -242,7 +274,7 @@ function ExerciseEditorCard({
             }
           />
         </Field>
-        <Field label="Min reps">
+        <Field label="Target reps">
           <Input
             type="number"
             min={1}
@@ -257,14 +289,14 @@ function ExerciseEditorCard({
 
       <Field className="mt-2" label="Target load">
         <Select value={loadKind} onChange={(e) => handleLoadKindChange(e.target.value)}>
-          <option value="bar">Total kg</option>
+          <option value="bar">Target kg (Barbell / Dumbbell total)</option>
           <option value="plates_each_side">Plates each side</option>
-          <option value="open">Open — log as I go</option>
+          <option value="open">Open — log weight as I go</option>
         </Select>
       </Field>
 
       {loadKind === "bar" && (
-        <Field className="mt-2" label="Kilograms">
+        <Field className="mt-2" label="Target kg">
           <Input
             type="number"
             min={0}

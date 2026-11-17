@@ -36,6 +36,8 @@ export type Session = {
   finishedAt: number | null;
   activeExerciseId: string;
   logs: Record<string, LoggedSet[]>;
+  customExercises?: ExerciseDef[];
+  title?: string;
 };
 
 export type BodyWeightLog = {

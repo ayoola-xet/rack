@@ -7,6 +7,8 @@ import {
   programById,
   REST_MS,
   seedPrograms,
+  sessionExercises,
+  SPLIT_TEMPLATES,
   suggestedSplit,
   withCue,
 } from "./program";
@@ -44,9 +46,15 @@ export type WorkoutState = {
   timerSettings: TimerSettings;
 
   startDay: (dayId: string) => void;
+  startQuickSession: (title?: string) => void;
+  addExerciseToActiveSession: (exercise: ExerciseDef) => void;
+  removeExerciseFromActiveSession: (exerciseId: string) => void;
   setActiveExercise: (exerciseId: string) => void;
   logSet: (reps: number, weightKg: number) => void;
+  updateSet: (exerciseId: string, setId: string, patch: Partial<LoggedSet>) => void;
+  deleteSet: (exerciseId: string, setId: string) => void;
   undoLastSet: () => void;
+  loadSplitTemplate: (templateKey: "ppl" | "upper_lower" | "full_body") => void;
   startRest: (durationMs?: number) => void;
   addRestTime: (ms: number) => void;
   setRestTimer: (ms: number) => void;
@@ -57,7 +65,7 @@ export type WorkoutState = {
   createDay: () => string;
   updateDay: (dayId: string, patch: Partial<ProgramDay>) => void;
   deleteDay: (dayId: string) => void;
-  addExercise: (dayId: string) => void;
+  addExercise: (dayId: string, exercise?: ExerciseDef) => void;
   updateExercise: (dayId: string, exerciseId: string, patch: Partial<ExerciseDef>) => void;
   removeExercise: (dayId: string, exerciseId: string) => void;
   moveExercise: (dayId: string, exerciseId: string, delta: number) => void;
@@ -142,7 +150,7 @@ export const useWorkoutStore = create<WorkoutState>()(
       startDay: (dayId: string) => {
         if (selectActiveSession(get())) return;
         const program = programById(get().programs, dayId);
-        if (!program || program.exercises.length === 0) return;
+        if (!program) return;
 
         const session: Session = {
           id: crypto.randomUUID(),
@@ -151,6 +159,8 @@ export const useWorkoutStore = create<WorkoutState>()(
           finishedAt: null,
           activeExerciseId: program.exercises[0]?.id ?? "",
           logs: initLogsForProgram(program),
+          customExercises: [],
+          title: `${program.weekday} · ${program.split || "Workout"}`,
         };
 
         set((state) => ({
@@ -158,6 +168,65 @@ export const useWorkoutStore = create<WorkoutState>()(
           activeSessionId: session.id,
           restUntil: null,
         }));
+      },
+
+      startQuickSession: (title?: string) => {
+        if (selectActiveSession(get())) return;
+        const session: Session = {
+          id: crypto.randomUUID(),
+          dayId: "quick",
+          startedAt: Date.now(),
+          finishedAt: null,
+          activeExerciseId: "",
+          logs: {},
+          customExercises: [],
+          title: title || "Quick Workout",
+        };
+
+        set((state) => ({
+          sessions: [session, ...state.sessions],
+          activeSessionId: session.id,
+          restUntil: null,
+        }));
+      },
+
+      addExerciseToActiveSession: (exercise: ExerciseDef) => {
+        const session = selectActiveSession(get());
+        if (!session) return;
+
+        const allCurrent = sessionExercises(session, get().programs);
+        if (allCurrent.some((e) => e.id === exercise.id)) return;
+
+        set((state) => ({
+          sessions: updateSessionInList(state.sessions, session.id, (s) => ({
+            ...s,
+            customExercises: [...(s.customExercises ?? []), exercise],
+            activeExerciseId: s.activeExerciseId || exercise.id,
+            logs: {
+              ...s.logs,
+              [exercise.id]: s.logs[exercise.id] ?? [],
+            },
+          })),
+        }));
+      },
+
+      removeExerciseFromActiveSession: (exerciseId: string) => {
+        const session = selectActiveSession(get());
+        if (!session) return;
+
+        set((state) => {
+          const updated = updateSessionInList(state.sessions, session.id, (s) => {
+            const nextCustom = (s.customExercises ?? []).filter((e) => e.id !== exerciseId);
+            const remaining = sessionExercises(s, state.programs).filter((e) => e.id !== exerciseId);
+            const nextActive = s.activeExerciseId === exerciseId ? (remaining[0]?.id ?? "") : s.activeExerciseId;
+            return {
+              ...s,
+              customExercises: nextCustom,
+              activeExerciseId: nextActive,
+            };
+          });
+          return { sessions: updated };
+        });
       },
 
       setActiveExercise: (exerciseId: string) => {
@@ -176,12 +245,9 @@ export const useWorkoutStore = create<WorkoutState>()(
       logSet: (reps: number, weightKg: number) => {
         const session = selectActiveSession(get());
         if (!session) return;
-        const program = programById(get().programs, session.dayId);
-        const exercise = program?.exercises.find((e) => e.id === session.activeExerciseId);
+        const allEx = sessionExercises(session, get().programs);
+        const exercise = allEx.find((e) => e.id === session.activeExerciseId);
         if (!exercise) return;
-
-        const currentSets = session.logs[exercise.id] ?? [];
-        if (currentSets.length >= exercise.maxSets) return;
 
         const newSet: LoggedSet = {
           id: crypto.randomUUID(),
@@ -213,6 +279,44 @@ export const useWorkoutStore = create<WorkoutState>()(
         }));
       },
 
+      updateSet: (exerciseId: string, setId: string, patch: Partial<LoggedSet>) => {
+        const session = selectActiveSession(get());
+        if (!session) return;
+
+        set((state) => ({
+          sessions: updateSessionInList(state.sessions, session.id, (s) => {
+            const sets = s.logs[exerciseId] ?? [];
+            return {
+              ...s,
+              logs: {
+                ...s.logs,
+                [exerciseId]: sets.map((set) =>
+                  set.id === setId ? { ...set, ...patch } : set
+                ),
+              },
+            };
+          }),
+        }));
+      },
+
+      deleteSet: (exerciseId: string, setId: string) => {
+        const session = selectActiveSession(get());
+        if (!session) return;
+
+        set((state) => ({
+          sessions: updateSessionInList(state.sessions, session.id, (s) => {
+            const sets = s.logs[exerciseId] ?? [];
+            return {
+              ...s,
+              logs: {
+                ...s.logs,
+                [exerciseId]: sets.filter((set) => set.id !== setId),
+              },
+            };
+          }),
+        }));
+      },
+
       undoLastSet: () => {
         const session = selectActiveSession(get());
         if (!session) return;
@@ -231,6 +335,14 @@ export const useWorkoutStore = create<WorkoutState>()(
               }))
             : state.sessions,
         }));
+      },
+
+      loadSplitTemplate: (templateKey: "ppl" | "upper_lower" | "full_body") => {
+        const found = SPLIT_TEMPLATES.find((t) => t.key === templateKey);
+        if (!found) return;
+        set({
+          programs: structuredClone(found.days) as ProgramDay[],
+        });
       },
 
       startRest: (durationMs?: number) => {
@@ -343,11 +455,11 @@ export const useWorkoutStore = create<WorkoutState>()(
         }));
       },
 
-      addExercise: (dayId: string) => {
+      addExercise: (dayId: string, exercise?: ExerciseDef) => {
         set((state) => ({
           programs: updateProgramInList(state.programs, dayId, (p) => ({
             ...p,
-            exercises: [...p.exercises, newExercise()],
+            exercises: [...p.exercises, exercise ?? newExercise()],
           })),
         }));
       },

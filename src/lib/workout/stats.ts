@@ -64,6 +64,61 @@ export function exerciseProgress(exercise: ExerciseDef, sets: LoggedSet[]) {
   };
 }
 
+export type PlateItem = {
+  weight: number;
+  count: number;
+};
+
+export function calculatePlates(targetTotalKg: number, barKg: number = 20): {
+  barKg: number;
+  neededTotalKg: number;
+  perSideKg: number;
+  platesPerSide: PlateItem[];
+  remainderKg: number;
+} {
+  const neededTotalKg = Math.max(0, targetTotalKg - barKg);
+  const perSideKg = neededTotalKg / 2;
+  const standardPlates = [25, 20, 15, 10, 5, 2.5, 1.25];
+  let rem = perSideKg;
+  const platesPerSide: PlateItem[] = [];
+
+  for (const p of standardPlates) {
+    if (rem >= p - 1e-6) {
+      const count = Math.floor(rem / p);
+      if (count > 0) {
+        platesPerSide.push({ weight: p, count });
+        rem = Math.round((rem - count * p) * 100) / 100;
+      }
+    }
+  }
+
+  return {
+    barKg,
+    neededTotalKg,
+    perSideKg,
+    platesPerSide,
+    remainderKg: rem,
+  };
+}
+
+export function countTotalSets(session: Session): number {
+  return Object.values(session.logs).reduce((acc, sets) => acc + sets.length, 0);
+}
+
+export function findExercisePR(sessions: Session[], exerciseId: string): number {
+  let pr = 0;
+  for (const s of sessions) {
+    if (s.finishedAt === null) continue;
+    const sets = s.logs[exerciseId] ?? [];
+    for (const set of sets) {
+      if (set.weightKg > pr) {
+        pr = set.weightKg;
+      }
+    }
+  }
+  return pr;
+}
+
 export function sessionVolume(session: Session): number {
   let total = 0;
   for (const sets of Object.values(session.logs)) {
@@ -83,8 +138,9 @@ export function maxReps(sets: LoggedSet[]): number {
 }
 
 export function sessionSummary(session: Session, program?: ProgramDay) {
-  const exercises = program?.exercises?.length
-    ? program.exercises
+  const combined = [...(program?.exercises ?? []), ...(session.customExercises ?? [])];
+  const exercises = combined.length
+    ? combined
     : Object.keys(session.logs).map((id) => ({
         id,
         name: id,

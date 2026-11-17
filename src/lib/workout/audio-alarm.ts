@@ -58,6 +58,31 @@ class SoundAlarmController {
     }
   }
 
+  public playCountdownBeep(isFinal: boolean = false): void {
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+
+    try {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(isFinal ? 880 : 587.33, now);
+
+      gain.gain.setValueAtTime(isFinal ? 0.25 : 0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + (isFinal ? 0.25 : 0.12));
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + (isFinal ? 0.26 : 0.13));
+    } catch {
+      // Audio play error handled gracefully
+    }
+  }
+
   public playAlarm(type: AlarmSoundType = "chime"): void {
     const ctx = this.getAudioContext();
     if (!ctx) return;
