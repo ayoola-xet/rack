@@ -32,6 +32,20 @@ export type TimerSettings = {
   countdownBeeps: boolean;
   defaultRestMs: number;
   autoStartRest: boolean;
+  plateBarbellKg: number;
+  weightUnit: "kg" | "lbs";
+};
+
+export type WorkoutExportData = {
+  version: number;
+  app: string;
+  exportedAt: string;
+  programs: ProgramDay[];
+  sessions: Session[];
+  bodyWeight: BodyWeightLog[];
+  goals: Goals;
+  timerSettings: TimerSettings;
+  lastWeightKg: Record<string, number>;
 };
 
 export type WorkoutState = {
@@ -81,6 +95,18 @@ export type WorkoutState = {
   upsertLiftGoal: (goal: LiftGoal) => void;
   removeLiftGoal: (exerciseId: string) => void;
   updateTimerSettings: (patch: Partial<TimerSettings>) => void;
+  resetAllData: () => void;
+  exportData: () => WorkoutExportData;
+  importData: (
+    jsonString: string,
+    mode?: "replace" | "merge",
+  ) => {
+    success: boolean;
+    message?: string;
+    error?: string;
+    sessionsCount?: number;
+    programsCount?: number;
+  };
 };
 
 const defaultGoals = (): Goals => ({
@@ -97,6 +123,8 @@ const defaultTimerSettings = (): TimerSettings => ({
   countdownBeeps: true,
   defaultRestMs: REST_MS,
   autoStartRest: true,
+  plateBarbellKg: 20,
+  weightUnit: "kg",
 });
 
 export function selectActiveSession(state: {
@@ -655,6 +683,121 @@ export const useWorkoutStore = create<WorkoutState>()(
           timerSettings: { ...state.timerSettings, ...patch },
         }));
       },
+
+      resetAllData: () => {
+        set({
+          programs: seedPrograms(),
+          sessions: [],
+          activeSessionId: null,
+          restUntil: null,
+          timerTotalMs: REST_MS,
+          lastWeightKg: {},
+          bodyWeight: [],
+          goals: defaultGoals(),
+          timerSettings: defaultTimerSettings(),
+        });
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.removeItem("rack-workout-v1");
+          } catch {
+            // Ignore error
+          }
+        }
+      },
+
+      exportData: (): WorkoutExportData => {
+        const state = get();
+        return {
+          version: 4,
+          app: "rack",
+          exportedAt: new Date().toISOString(),
+          programs: state.programs,
+          sessions: state.sessions,
+          bodyWeight: state.bodyWeight,
+          goals: state.goals,
+          timerSettings: state.timerSettings,
+          lastWeightKg: state.lastWeightKg,
+        };
+      },
+
+      importData: (jsonString: string, mode: "replace" | "merge" = "replace") => {
+        try {
+          const data = JSON.parse(jsonString) as Partial<WorkoutExportData>;
+          if (!data || typeof data !== "object") {
+            return { success: false, error: "Invalid backup file: File is not valid JSON." };
+          }
+          if (!Array.isArray(data.sessions) && !Array.isArray(data.programs)) {
+            return {
+              success: false,
+              error: "Invalid backup format: File contains neither workout sessions nor routines.",
+            };
+          }
+
+          const rawPrograms = Array.isArray(data.programs) ? data.programs : [];
+          const rawSessions = Array.isArray(data.sessions) ? data.sessions : [];
+          const rawBodyWeight = Array.isArray(data.bodyWeight) ? data.bodyWeight : [];
+          const rawLastWeight =
+            data.lastWeightKg && typeof data.lastWeightKg === "object" ? data.lastWeightKg : {};
+          const rawGoals =
+            data.goals && typeof data.goals === "object" ? data.goals : defaultGoals();
+          const rawTimer =
+            data.timerSettings && typeof data.timerSettings === "object"
+              ? { ...defaultTimerSettings(), ...data.timerSettings }
+              : defaultTimerSettings();
+
+          if (mode === "replace") {
+            set({
+              programs: rawPrograms.length > 0 ? rawPrograms : seedPrograms(),
+              sessions: rawSessions,
+              activeSessionId: null,
+              restUntil: null,
+              timerTotalMs: rawTimer.defaultRestMs ?? REST_MS,
+              lastWeightKg: rawLastWeight,
+              bodyWeight: rawBodyWeight,
+              goals: rawGoals,
+              timerSettings: rawTimer,
+            });
+            return {
+              success: true,
+              message: `Restored ${rawSessions.length} workouts and ${rawPrograms.length} routines.`,
+              sessionsCount: rawSessions.length,
+              programsCount: rawPrograms.length,
+            };
+          } else {
+            const current = get();
+            const existingSessionIds = new Set(current.sessions.map((s) => s.id));
+            const newSessions = rawSessions.filter((s) => !existingSessionIds.has(s.id));
+            const mergedSessions = [...newSessions, ...current.sessions];
+
+            const existingDayIds = new Set(current.programs.map((p) => p.id));
+            const newPrograms = rawPrograms.filter((p) => !existingDayIds.has(p.id));
+            const mergedPrograms = [...current.programs, ...newPrograms];
+
+            const existingBwIds = new Set(current.bodyWeight.map((b) => b.id));
+            const newBw = rawBodyWeight.filter((b) => !existingBwIds.has(b.id));
+            const mergedBw = [...newBw, ...current.bodyWeight].sort((a, b) => b.at - a.at);
+
+            set({
+              sessions: mergedSessions,
+              programs: mergedPrograms.length > 0 ? mergedPrograms : current.programs,
+              bodyWeight: mergedBw,
+              lastWeightKg: { ...current.lastWeightKg, ...rawLastWeight },
+            });
+
+            return {
+              success: true,
+              message: `Merged ${newSessions.length} workouts and ${newPrograms.length} routines into your data.`,
+              sessionsCount: newSessions.length,
+              programsCount: newPrograms.length,
+            };
+          }
+        } catch (err: unknown) {
+          return {
+            success: false,
+            error: err instanceof Error ? err.message : "Failed to parse backup JSON file.",
+          };
+        }
+      },
     }),
     {
       name: "rack-workout-v1",
@@ -701,4 +844,30 @@ export const useWorkoutStore = create<WorkoutState>()(
 
 export function rehydrateWorkoutStore() {
   return useWorkoutStore.persist.rehydrate();
+}
+
+export function downloadBackupFile(exportData: WorkoutExportData) {
+  if (typeof window === "undefined") return;
+  const jsonStr = JSON.stringify(exportData, null, 2);
+  const blob = new Blob([jsonStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `rack-backup-${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+export function getStorageUsageBytes(): number {
+  if (typeof window === "undefined" || !window.localStorage) return 0;
+  try {
+    const raw = localStorage.getItem("rack-workout-v1");
+    return raw ? new Blob([raw]).size : 0;
+  } catch {
+    return 0;
+  }
 }

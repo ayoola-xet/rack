@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import { calculatePlates, formatKg } from "@/lib/workout/stats";
+import { useWorkoutStore } from "@/lib/workout/store";
 import { cn } from "@/lib/utils";
 
 const PLATE_COLORS: Record<number, string> = {
@@ -26,8 +27,9 @@ export function PlateCalculatorModal({
   onClose: () => void;
   onApplyWeight?: (weightKg: number) => void;
 }) {
+  const defaultBarKg = useWorkoutStore((s) => s.timerSettings.plateBarbellKg) || 20;
   const [weightKg, setWeightKg] = useState<number>(initialWeightKg || 60);
-  const [barKg, setBarKg] = useState<number>(20);
+  const [barKg, setBarKg] = useState<number>(defaultBarKg);
 
   if (!isOpen) return null;
 

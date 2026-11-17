@@ -4,6 +4,7 @@ import {
   ChevronLeft,
   Dumbbell,
   House,
+  Settings,
   Target,
   WifiOff,
 } from "lucide-react";
@@ -65,9 +66,10 @@ export function AppHeaderTitle({ className }: { className?: string }) {
 
 const NAV_ITEMS = [
   { to: "/", label: "Home", icon: House, exact: true },
-  { to: "/progress", label: "Progress", icon: ChartNoAxesColumn, exact: false },
   { to: "/programs", label: "Program", icon: Dumbbell, exact: false },
+  { to: "/progress", label: "Progress", icon: ChartNoAxesColumn, exact: false },
   { to: "/goals", label: "Goals", icon: Target, exact: false },
+  { to: "/settings", label: "Settings", icon: Settings, exact: false },
 ] as const;
 
 export function BottomNav() {

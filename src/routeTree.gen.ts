@@ -14,6 +14,7 @@ import { Route as GoalsRouteImport } from './routes/goals'
 import { Route as ProgramsRouteImport } from './routes/programs'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as SessionRouteImport } from './routes/session'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProgramsIndexRouteImport } from './routes/programs.index'
 import { Route as ProgramsDayIdRouteImport } from './routes/programs.$dayId'
 
@@ -42,6 +43,11 @@ const SessionRoute = SessionRouteImport.update({
   path: '/session',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProgramsIndexRoute = ProgramsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/programs': typeof ProgramsRouteWithChildren
   '/progress': typeof ProgressRoute
   '/session': typeof SessionRoute
+  '/settings': typeof SettingsRoute
   '/programs/$dayId': typeof ProgramsDayIdRoute
   '/programs/': typeof ProgramsIndexRoute
 }
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/goals': typeof GoalsRoute
   '/progress': typeof ProgressRoute
   '/session': typeof SessionRoute
+  '/settings': typeof SettingsRoute
   '/programs/$dayId': typeof ProgramsDayIdRoute
   '/programs': typeof ProgramsIndexRoute
 }
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/programs': typeof ProgramsRouteWithChildren
   '/progress': typeof ProgressRoute
   '/session': typeof SessionRoute
+  '/settings': typeof SettingsRoute
   '/programs/$dayId': typeof ProgramsDayIdRoute
   '/programs/': typeof ProgramsIndexRoute
 }
@@ -88,11 +97,18 @@ export interface FileRouteTypes {
     | '/programs'
     | '/progress'
     | '/session'
+    | '/settings'
     | '/programs/$dayId'
     | '/programs/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/goals' | '/progress' | '/session' | '/programs/$dayId' | '/programs'
+    | '/'
+    | '/goals'
+    | '/progress'
+    | '/session'
+    | '/settings'
+    | '/programs/$dayId'
+    | '/programs'
   id:
     | '__root__'
     | '/'
@@ -100,6 +116,7 @@ export interface FileRouteTypes {
     | '/programs'
     | '/progress'
     | '/session'
+    | '/settings'
     | '/programs/$dayId'
     | '/programs/'
   fileRoutesById: FileRoutesById
@@ -110,6 +127,7 @@ export interface RootRouteChildren {
   ProgramsRoute: typeof ProgramsRouteWithChildren
   ProgressRoute: typeof ProgressRoute
   SessionRoute: typeof SessionRoute
+  SettingsRoute: typeof SettingsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -149,6 +167,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SessionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/programs/': {
       id: '/programs/'
       path: '/'
@@ -186,6 +211,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProgramsRoute: ProgramsRouteWithChildren,
   ProgressRoute: ProgressRoute,
   SessionRoute: SessionRoute,
+  SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
