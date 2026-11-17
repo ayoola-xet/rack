@@ -1,4 +1,4 @@
-import { Trophy, Clock, Dumbbell, Flame, CheckCircle2 } from "lucide-react";
+import { Trophy, Clock, Dumbbell, CheckCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDuration, formatKg, sessionVolume, countTotalSets } from "@/lib/workout/stats";
 import type { Session, ProgramDay } from "@/lib/workout/types";
@@ -8,12 +8,14 @@ export function WorkoutFinishedModal({
   isOpen,
   session,
   programs,
-  onClose,
+  onFinish,
+  onDismiss,
 }: {
   isOpen: boolean;
   session: Session | null;
   programs: ProgramDay[];
-  onClose: () => void;
+  onFinish: () => void;
+  onDismiss: () => void;
 }) {
   if (!isOpen || !session) return null;
 
@@ -28,16 +30,27 @@ export function WorkoutFinishedModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
       <div className="w-full max-w-sm rounded-2xl border border-border bg-surface p-5 text-center shadow-2xl animate-in fade-in zoom-in-95 duration-200 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
-        {/* Trophy Badge */}
-        <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-accent/15 text-accent shadow-inner">
-          <Trophy className="size-7" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <Trophy className="size-4 text-accent" />
+            <h2 className="font-display text-lg font-bold tracking-tight text-fg">
+              {totalSets > 0 ? "Wrap up this workout?" : "No sets logged yet"}
+            </h2>
+          </div>
+          <button
+            type="button"
+            aria-label="Close and keep working"
+            onClick={onDismiss}
+            className="flex size-7 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-fg"
+          >
+            <X className="size-4" />
+          </button>
         </div>
 
-        <h2 className="mt-3.5 font-display text-2xl font-bold tracking-tight text-fg">
-          Workout Complete!
-        </h2>
-        <p className="mt-0.5 text-xs text-muted">
-          Great consistency. Another session in the books.
+        <p className="mt-1 text-xs text-muted">
+          {totalSets > 0
+            ? "Finish to save this session, or keep working — nothing is lost."
+            : "Finishing now discards this empty session (you can undo it)."}
         </p>
 
         {/* Stats Grid */}
@@ -104,13 +117,24 @@ export function WorkoutFinishedModal({
           </div>
         </div>
 
-        <Button
-          className="mt-5 w-full font-semibold"
-          size="lg"
-          onClick={onClose}
-        >
-          View Progress & Charts
-        </Button>
+        <div className="mt-4 flex gap-2">
+          <Button
+            className="flex-1 font-semibold"
+            size="lg"
+            onClick={onFinish}
+          >
+            <CheckCircle2 className="size-4" />
+            Finish &amp; save session
+          </Button>
+          <Button
+            className="flex-1 font-semibold"
+            size="lg"
+            variant="secondary"
+            onClick={onDismiss}
+          >
+            Keep working
+          </Button>
+        </div>
       </div>
     </div>
   );

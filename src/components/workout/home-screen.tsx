@@ -216,7 +216,17 @@ export function HomeScreen() {
 
           {/* Action Buttons: Start Workout & Quick Start */}
           <div className="mt-4 flex flex-col sm:flex-row gap-2">
-            {activeProgram && activeProgram.exercises.length > 0 ? (
+            {activeSession ? (
+              <Button
+                className="flex-1 font-bold shadow-md"
+                size="lg"
+                onClick={() => void navigate({ to: "/session" })}
+                disabled={!hydrated}
+              >
+                <Play className="size-4 fill-current" />
+                Resume active session
+              </Button>
+            ) : activeProgram && activeProgram.exercises.length > 0 ? (
               <Button
                 className="flex-1 font-bold shadow-md"
                 size="lg"
@@ -238,16 +248,18 @@ export function HomeScreen() {
               </Button>
             )}
 
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={handleStartQuickWorkout}
-              disabled={!hydrated}
-              className="gap-1.5 font-semibold text-xs"
-            >
-              <Zap className="size-3.5 text-accent" />
-              Quick Start
-            </Button>
+            {!activeSession && (
+              <Button
+                variant="secondary"
+                size="lg"
+                onClick={handleStartQuickWorkout}
+                disabled={!hydrated}
+                className="gap-1.5 font-semibold text-xs"
+              >
+                <Zap className="size-3.5 text-accent" />
+                Quick Start
+              </Button>
+            )}
           </div>
         </section>
 
@@ -452,6 +464,25 @@ function ActiveSessionBanner({
 }) {
   const setsCount = countTotalSets(session);
   const title = session.title || (program ? `${program.weekday} · ${program.split}` : "Active Workout");
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+
+  if (confirmDiscard) {
+    return (
+      <div className="mt-2 rounded-xl border border-miss/40 bg-miss/10 p-3 shadow-card">
+        <p className="text-xs text-fg">
+          Discard "{title}"? {setsCount > 0 ? `${setsCount} logged set${setsCount === 1 ? "" : "s"} will be removed (undo available).` : "This empty session will be removed."}
+        </p>
+        <div className="mt-2 flex gap-2">
+          <Button size="sm" variant="danger" onClick={onDiscard}>
+            Yes, discard
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setConfirmDiscard(false)}>
+            Keep session
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-2 rounded-xl border border-accent/40 bg-accent/10 p-3 shadow-card animate-in fade-in">
@@ -464,7 +495,7 @@ function ActiveSessionBanner({
         </div>
         <button
           type="button"
-          onClick={onDiscard}
+          onClick={() => setConfirmDiscard(true)}
           className="text-[11px] text-miss hover:underline font-medium"
         >
           Discard

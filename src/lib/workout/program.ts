@@ -28,9 +28,9 @@ export type LibraryExercise = {
 
 export const EXERCISE_LIBRARY: LibraryExercise[] = [
   // Chest
-  { name: "Barbell Bench Press", group: "Chest", minSets: 3, maxSets: 5, minReps: 6, load: { kind: "bar", kg: 80 } },
+  { name: "Barbell Bench Press", group: "Chest", minSets: 3, maxSets: 5, minReps: 6, load: { kind: "open" } },
   { name: "Incline Dumbbell Press", group: "Chest", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "open" } },
-  { name: "Incline Barbell Bench", group: "Chest", minSets: 3, maxSets: 4, minReps: 6, load: { kind: "bar", kg: 70 } },
+  { name: "Incline Barbell Bench", group: "Chest", minSets: 3, maxSets: 4, minReps: 6, load: { kind: "open" } },
   { name: "Dumbbell Flat Bench", group: "Chest", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "open" } },
   { name: "Cable Chest Flyes", group: "Chest", minSets: 3, maxSets: 4, minReps: 12, load: { kind: "open" } },
   { name: "Dips (Chest / Triceps)", group: "Chest", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "open" } },
@@ -38,17 +38,17 @@ export const EXERCISE_LIBRARY: LibraryExercise[] = [
   { name: "Push-ups", group: "Chest", minSets: 3, maxSets: 4, minReps: 15, load: { kind: "open" } },
 
   // Back
-  { name: "Barbell Deadlift", group: "Back", minSets: 3, maxSets: 4, minReps: 5, load: { kind: "bar", kg: 100 } },
+  { name: "Barbell Deadlift", group: "Back", minSets: 3, maxSets: 4, minReps: 5, load: { kind: "open" } },
   { name: "Lat Pulldown", group: "Back", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "open" } },
   { name: "Pull-ups", group: "Back", minSets: 3, maxSets: 4, minReps: 6, load: { kind: "open" } },
-  { name: "Barbell Bent-Over Row", group: "Back", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "bar", kg: 60 } },
+  { name: "Barbell Bent-Over Row", group: "Back", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "open" } },
   { name: "Seated Cable Row", group: "Back", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "open" } },
   { name: "Dumbbell Single-Arm Row", group: "Back", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "open" } },
   { name: "T-Bar Row", group: "Back", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "open" } },
   { name: "Face Pulls", group: "Back", minSets: 3, maxSets: 4, minReps: 15, load: { kind: "open" } },
 
   // Shoulders
-  { name: "Overhead Barbell Press", group: "Shoulders", minSets: 3, maxSets: 4, minReps: 6, load: { kind: "bar", kg: 45 } },
+  { name: "Overhead Barbell Press", group: "Shoulders", minSets: 3, maxSets: 4, minReps: 6, load: { kind: "open" } },
   { name: "Dumbbell Shoulder Press", group: "Shoulders", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "open" } },
   { name: "Dumbbell Lateral Raise", group: "Shoulders", minSets: 3, maxSets: 4, minReps: 12, load: { kind: "open" } },
   { name: "Cable Lateral Raise", group: "Shoulders", minSets: 3, maxSets: 4, minReps: 15, load: { kind: "open" } },
@@ -57,18 +57,18 @@ export const EXERCISE_LIBRARY: LibraryExercise[] = [
   { name: "Dumbbell Shrugs", group: "Shoulders", minSets: 3, maxSets: 4, minReps: 12, load: { kind: "open" } },
 
   // Arms
-  { name: "Barbell Bicep Curl", group: "Arms", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "bar", kg: 30 } },
+  { name: "Barbell Bicep Curl", group: "Arms", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "open" } },
   { name: "Dumbbell Hammer Curl", group: "Arms", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "open" } },
   { name: "Incline Dumbbell Curl", group: "Arms", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "open" } },
-  { name: "Preacher Curl", group: "Arms", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "bar", kg: 25 } },
+  { name: "Preacher Curl", group: "Arms", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "open" } },
   { name: "Tricep Rope Pushdown", group: "Arms", minSets: 3, maxSets: 4, minReps: 12, load: { kind: "open" } },
-  { name: "Skull Crushers (EZ Bar)", group: "Arms", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "bar", kg: 30 } },
+  { name: "Skull Crushers (EZ Bar)", group: "Arms", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "open" } },
   { name: "Overhead Tricep Extension", group: "Arms", minSets: 3, maxSets: 4, minReps: 12, load: { kind: "open" } },
-  { name: "Close-Grip Bench Press", group: "Arms", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "bar", kg: 60 } },
+  { name: "Close-Grip Bench Press", group: "Arms", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "open" } },
 
   // Legs
-  { name: "Barbell Back Squat", group: "Legs", minSets: 3, maxSets: 5, minReps: 6, load: { kind: "bar", kg: 90 } },
-  { name: "Romanian Deadlift (RDL)", group: "Legs", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "bar", kg: 80 } },
+  { name: "Barbell Back Squat", group: "Legs", minSets: 3, maxSets: 5, minReps: 6, load: { kind: "open" } },
+  { name: "Romanian Deadlift (RDL)", group: "Legs", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "open" } },
   { name: "Leg Press", group: "Legs", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "open" } },
   { name: "Leg Extension", group: "Legs", minSets: 3, maxSets: 4, minReps: 12, load: { kind: "open" } },
   { name: "Seated Leg Curl", group: "Legs", minSets: 3, maxSets: 4, minReps: 12, load: { kind: "open" } },
@@ -104,9 +104,9 @@ export function buildTemplatePPL(): ProgramDay[] {
       split: "Push (Chest, Shoulders & Triceps)",
       blurb: "Heavy bench pressing first, overhead pressing, then tricep burnout.",
       exercises: [
-        withCue({ id: "bench-press", name: "Barbell Bench Press", group: "Chest", cue: "", minSets: 3, maxSets: 5, minReps: 6, load: { kind: "bar", kg: 80 } }),
+        withCue({ id: "bench-press", name: "Barbell Bench Press", group: "Chest", cue: "", minSets: 3, maxSets: 5, minReps: 6, load: { kind: "open" } }),
         withCue({ id: "incline-db", name: "Incline Dumbbell Press", group: "Chest", cue: "", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "open" } }),
-        withCue({ id: "ohp", name: "Overhead Barbell Press", group: "Shoulders", cue: "", minSets: 3, maxSets: 4, minReps: 6, load: { kind: "bar", kg: 45 } }),
+        withCue({ id: "ohp", name: "Overhead Barbell Press", group: "Shoulders", cue: "", minSets: 3, maxSets: 4, minReps: 6, load: { kind: "open" } }),
         withCue({ id: "lat-raise", name: "Dumbbell Lateral Raise", group: "Shoulders", cue: "", minSets: 3, maxSets: 4, minReps: 12, load: { kind: "open" } }),
         withCue({ id: "tricep-pushdown", name: "Tricep Rope Pushdown", group: "Arms", cue: "", minSets: 3, maxSets: 4, minReps: 12, load: { kind: "open" } }),
       ],
@@ -117,11 +117,11 @@ export function buildTemplatePPL(): ProgramDay[] {
       split: "Pull (Back, Biceps & Rear Delts)",
       blurb: "Deadlifts, heavy rows, vertical pulls, and arm work.",
       exercises: [
-        withCue({ id: "deadlift", name: "Barbell Deadlift", group: "Back", cue: "", minSets: 3, maxSets: 4, minReps: 5, load: { kind: "bar", kg: 100 } }),
+        withCue({ id: "deadlift", name: "Barbell Deadlift", group: "Back", cue: "", minSets: 3, maxSets: 4, minReps: 5, load: { kind: "open" } }),
         withCue({ id: "lat-pulldown", name: "Lat Pulldown", group: "Back", cue: "", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "open" } }),
-        withCue({ id: "barbell-row", name: "Barbell Bent-Over Row", group: "Back", cue: "", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "bar", kg: 60 } }),
+        withCue({ id: "barbell-row", name: "Barbell Bent-Over Row", group: "Back", cue: "", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "open" } }),
         withCue({ id: "face-pull", name: "Face Pulls", group: "Back", cue: "", minSets: 3, maxSets: 4, minReps: 15, load: { kind: "open" } }),
-        withCue({ id: "barbell-curl", name: "Barbell Bicep Curl", group: "Arms", cue: "", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "bar", kg: 30 } }),
+        withCue({ id: "barbell-curl", name: "Barbell Bicep Curl", group: "Arms", cue: "", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "open" } }),
       ],
     },
     {
@@ -130,8 +130,8 @@ export function buildTemplatePPL(): ProgramDay[] {
       split: "Legs & Core",
       blurb: "Squat heavy, posterior chain with Romanian Deadlifts, finish with calves & core.",
       exercises: [
-        withCue({ id: "squat", name: "Barbell Back Squat", group: "Legs", cue: "", minSets: 3, maxSets: 5, minReps: 6, load: { kind: "bar", kg: 90 } }),
-        withCue({ id: "rdl", name: "Romanian Deadlift (RDL)", group: "Legs", cue: "", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "bar", kg: 80 } }),
+        withCue({ id: "squat", name: "Barbell Back Squat", group: "Legs", cue: "", minSets: 3, maxSets: 5, minReps: 6, load: { kind: "open" } }),
+        withCue({ id: "rdl", name: "Romanian Deadlift (RDL)", group: "Legs", cue: "", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "open" } }),
         withCue({ id: "leg-press", name: "Leg Press", group: "Legs", cue: "", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "open" } }),
         withCue({ id: "calf-raise", name: "Standing Calf Raise", group: "Legs", cue: "", minSets: 4, maxSets: 5, minReps: 12, load: { kind: "open" } }),
         withCue({ id: "knee-raise", name: "Hanging Knee / Leg Raise", group: "Core", cue: "", minSets: 3, maxSets: 4, minReps: 12, load: { kind: "open" } }),
@@ -148,9 +148,9 @@ export function buildTemplateUpperLower(): ProgramDay[] {
       split: "Upper Body Power",
       blurb: "Heavy horizontal and vertical presses and pulls.",
       exercises: [
-        withCue({ id: "bench-press", name: "Barbell Bench Press", group: "Chest", cue: "", minSets: 3, maxSets: 4, minReps: 6, load: { kind: "bar", kg: 80 } }),
-        withCue({ id: "barbell-row", name: "Barbell Bent-Over Row", group: "Back", cue: "", minSets: 3, maxSets: 4, minReps: 6, load: { kind: "bar", kg: 65 } }),
-        withCue({ id: "ohp", name: "Overhead Barbell Press", group: "Shoulders", cue: "", minSets: 3, maxSets: 4, minReps: 6, load: { kind: "bar", kg: 45 } }),
+        withCue({ id: "bench-press", name: "Barbell Bench Press", group: "Chest", cue: "", minSets: 3, maxSets: 4, minReps: 6, load: { kind: "open" } }),
+        withCue({ id: "barbell-row", name: "Barbell Bent-Over Row", group: "Back", cue: "", minSets: 3, maxSets: 4, minReps: 6, load: { kind: "open" } }),
+        withCue({ id: "ohp", name: "Overhead Barbell Press", group: "Shoulders", cue: "", minSets: 3, maxSets: 4, minReps: 6, load: { kind: "open" } }),
         withCue({ id: "lat-pulldown", name: "Lat Pulldown", group: "Back", cue: "", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "open" } }),
         withCue({ id: "tricep-pushdown", name: "Tricep Rope Pushdown", group: "Arms", cue: "", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "open" } }),
       ],
@@ -161,8 +161,8 @@ export function buildTemplateUpperLower(): ProgramDay[] {
       split: "Lower Body Power",
       blurb: "Squat strength, hinges, and core stabilization.",
       exercises: [
-        withCue({ id: "squat", name: "Barbell Back Squat", group: "Legs", cue: "", minSets: 3, maxSets: 5, minReps: 6, load: { kind: "bar", kg: 90 } }),
-        withCue({ id: "rdl", name: "Romanian Deadlift (RDL)", group: "Legs", cue: "", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "bar", kg: 80 } }),
+        withCue({ id: "squat", name: "Barbell Back Squat", group: "Legs", cue: "", minSets: 3, maxSets: 5, minReps: 6, load: { kind: "open" } }),
+        withCue({ id: "rdl", name: "Romanian Deadlift (RDL)", group: "Legs", cue: "", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "open" } }),
         withCue({ id: "leg-press", name: "Leg Press", group: "Legs", cue: "", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "open" } }),
         withCue({ id: "calf-raise", name: "Standing Calf Raise", group: "Legs", cue: "", minSets: 4, maxSets: 5, minReps: 12, load: { kind: "open" } }),
       ],
@@ -177,7 +177,7 @@ export function buildTemplateUpperLower(): ProgramDay[] {
         withCue({ id: "cable-row", name: "Seated Cable Row", group: "Back", cue: "", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "open" } }),
         withCue({ id: "lat-raise", name: "Dumbbell Lateral Raise", group: "Shoulders", cue: "", minSets: 3, maxSets: 4, minReps: 12, load: { kind: "open" } }),
         withCue({ id: "face-pull", name: "Face Pulls", group: "Back", cue: "", minSets: 3, maxSets: 4, minReps: 15, load: { kind: "open" } }),
-        withCue({ id: "barbell-curl", name: "Barbell Bicep Curl", group: "Arms", cue: "", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "bar", kg: 30 } }),
+        withCue({ id: "barbell-curl", name: "Barbell Bicep Curl", group: "Arms", cue: "", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "open" } }),
       ],
     },
     {
@@ -186,7 +186,7 @@ export function buildTemplateUpperLower(): ProgramDay[] {
       split: "Lower Body Hypertrophy",
       blurb: "Deadlifts, leg isolation, and high-volume calves & abs.",
       exercises: [
-        withCue({ id: "deadlift", name: "Barbell Deadlift", group: "Back", cue: "", minSets: 3, maxSets: 4, minReps: 5, load: { kind: "bar", kg: 100 } }),
+        withCue({ id: "deadlift", name: "Barbell Deadlift", group: "Back", cue: "", minSets: 3, maxSets: 4, minReps: 5, load: { kind: "open" } }),
         withCue({ id: "leg-ext", name: "Leg Extension", group: "Legs", cue: "", minSets: 3, maxSets: 4, minReps: 12, load: { kind: "open" } }),
         withCue({ id: "leg-curl", name: "Seated Leg Curl", group: "Legs", cue: "", minSets: 3, maxSets: 4, minReps: 12, load: { kind: "open" } }),
         withCue({ id: "knee-raise", name: "Hanging Knee / Leg Raise", group: "Core", cue: "", minSets: 3, maxSets: 4, minReps: 12, load: { kind: "open" } }),
@@ -203,10 +203,10 @@ export function buildTemplateFullBody(): ProgramDay[] {
       split: "Full Body A",
       blurb: "Squat, bench, and row foundation.",
       exercises: [
-        withCue({ id: "squat", name: "Barbell Back Squat", group: "Legs", cue: "", minSets: 3, maxSets: 5, minReps: 6, load: { kind: "bar", kg: 90 } }),
-        withCue({ id: "bench-press", name: "Barbell Bench Press", group: "Chest", cue: "", minSets: 3, maxSets: 5, minReps: 6, load: { kind: "bar", kg: 80 } }),
-        withCue({ id: "barbell-row", name: "Barbell Bent-Over Row", group: "Back", cue: "", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "bar", kg: 60 } }),
-        withCue({ id: "barbell-curl", name: "Barbell Bicep Curl", group: "Arms", cue: "", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "bar", kg: 30 } }),
+        withCue({ id: "squat", name: "Barbell Back Squat", group: "Legs", cue: "", minSets: 3, maxSets: 5, minReps: 6, load: { kind: "open" } }),
+        withCue({ id: "bench-press", name: "Barbell Bench Press", group: "Chest", cue: "", minSets: 3, maxSets: 5, minReps: 6, load: { kind: "open" } }),
+        withCue({ id: "barbell-row", name: "Barbell Bent-Over Row", group: "Back", cue: "", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "open" } }),
+        withCue({ id: "barbell-curl", name: "Barbell Bicep Curl", group: "Arms", cue: "", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "open" } }),
       ],
     },
     {
@@ -215,8 +215,8 @@ export function buildTemplateFullBody(): ProgramDay[] {
       split: "Full Body B",
       blurb: "Deadlift focus, overhead pressing, and vertical pull.",
       exercises: [
-        withCue({ id: "deadlift", name: "Barbell Deadlift", group: "Back", cue: "", minSets: 3, maxSets: 4, minReps: 5, load: { kind: "bar", kg: 100 } }),
-        withCue({ id: "ohp", name: "Overhead Barbell Press", group: "Shoulders", cue: "", minSets: 3, maxSets: 4, minReps: 6, load: { kind: "bar", kg: 45 } }),
+        withCue({ id: "deadlift", name: "Barbell Deadlift", group: "Back", cue: "", minSets: 3, maxSets: 4, minReps: 5, load: { kind: "open" } }),
+        withCue({ id: "ohp", name: "Overhead Barbell Press", group: "Shoulders", cue: "", minSets: 3, maxSets: 4, minReps: 6, load: { kind: "open" } }),
         withCue({ id: "lat-pulldown", name: "Lat Pulldown", group: "Back", cue: "", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "open" } }),
         withCue({ id: "tricep-pushdown", name: "Tricep Rope Pushdown", group: "Arms", cue: "", minSets: 3, maxSets: 4, minReps: 12, load: { kind: "open" } }),
       ],
@@ -227,7 +227,7 @@ export function buildTemplateFullBody(): ProgramDay[] {
       split: "Full Body C",
       blurb: "Hinges, dumbbell presses, and lateral shoulder work.",
       exercises: [
-        withCue({ id: "rdl", name: "Romanian Deadlift (RDL)", group: "Legs", cue: "", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "bar", kg: 80 } }),
+        withCue({ id: "rdl", name: "Romanian Deadlift (RDL)", group: "Legs", cue: "", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "open" } }),
         withCue({ id: "incline-db", name: "Incline Dumbbell Press", group: "Chest", cue: "", minSets: 3, maxSets: 4, minReps: 8, load: { kind: "open" } }),
         withCue({ id: "cable-row", name: "Seated Cable Row", group: "Back", cue: "", minSets: 3, maxSets: 4, minReps: 10, load: { kind: "open" } }),
         withCue({ id: "lat-raise", name: "Dumbbell Lateral Raise", group: "Shoulders", cue: "", minSets: 3, maxSets: 4, minReps: 12, load: { kind: "open" } }),

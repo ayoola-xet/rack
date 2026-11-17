@@ -12,9 +12,11 @@ Live: [rackbro.vercel.app](https://rackbro.vercel.app)
   - Auto-starting rest countdown timer between sets.
   - Web Audio API alarms: Melodic Chime, Boxing Bell, Digital Beep, and Gong.
   - 3-2-1 countdown audio ticks and haptic vibration alarms.
-  - Background Web Notifications when rest finishes.
-  - Quick-adjust timer buttons (+15s, +30s, presets).
-- **Split & Program Customization**: Full control over your training split and lifts.
+  - Web notifications when rest finishes (while the tab is open).
+  - Quick-adjust timer buttons (+15s, +30s) and rest presets in Settings.
+- **Undo for Mistakes**: deleting a set, discarding a session, or finishing a workout shows a toast with an Undo button.
+- **Split & Program Customization**: Full control over your training split and lifts. Load targets only count when you set them — the logger never judges your weights by default.
+- **Settings Page**: timer presets, alarm sounds, notifications, and plate-calculator bar weight live on a dedicated `/settings` screen.
 - **Progress & Charts**: Track body weight, session volume, and max weight on lifts over time.
 - **Offline & Private**: All data stays securely stored in the browser on your device via Zustand persist (`localStorage`). No server database, no account needed.
 

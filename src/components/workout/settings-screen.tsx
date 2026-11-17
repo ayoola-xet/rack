@@ -591,10 +591,10 @@ export function SettingsScreen() {
             <div className="flex items-center justify-between border-t border-border/50 pt-3">
               <div>
                 <span className="text-xs font-semibold text-fg block">
-                  Timer Background Notifications
+                  Background Notifications
                 </span>
                 <span className="text-[11px] text-muted">
-                  Notifies you when rest finishes while phone is locked
+                  Notifies when rest finishes while the tab is open in the background
                 </span>
               </div>
               <input
@@ -607,52 +607,14 @@ export function SettingsScreen() {
           </div>
         </section>
 
-        {/* SECTION 4: UNITS & BARBELL DEFAULTS */}
+        {/* SECTION 4: EQUIPMENT DEFAULTS */}
         <section className="flex flex-col gap-2.5">
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted">
             <Sliders className="size-3.5 text-primary" />
-            <span>Units & Equipment</span>
+            <span>Equipment</span>
           </div>
 
           <div className="flex flex-col gap-3 rounded-xl border border-border/80 bg-surface p-4">
-            {/* Weight Unit */}
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold text-fg block">
-                  Weight Unit
-                </span>
-                <span className="text-[11px] text-muted">
-                  Display units for barbell and dumbell loads
-                </span>
-              </div>
-              <div className="flex rounded-lg border border-border bg-surface-2 p-0.5 text-xs font-semibold">
-                <button
-                  type="button"
-                  onClick={() => updateTimerSettings({ weightUnit: "kg" })}
-                  className={cn(
-                    "px-3 py-1 rounded-md transition-colors",
-                    timerSettings.weightUnit === "kg"
-                      ? "bg-primary text-primary-fg"
-                      : "text-muted hover:text-fg",
-                  )}
-                >
-                  kg
-                </button>
-                <button
-                  type="button"
-                  onClick={() => updateTimerSettings({ weightUnit: "lbs" })}
-                  className={cn(
-                    "px-3 py-1 rounded-md transition-colors",
-                    timerSettings.weightUnit === "lbs"
-                      ? "bg-primary text-primary-fg"
-                      : "text-muted hover:text-fg",
-                  )}
-                >
-                  lbs
-                </button>
-              </div>
-            </div>
-
             {/* Standard Olympic Barbell Weight */}
             <div className="flex items-center justify-between border-t border-border/50 pt-3">
               <div>

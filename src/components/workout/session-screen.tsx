@@ -4,23 +4,22 @@ import {
   BellOff,
   Check,
   ChevronRight,
+  Dumbbell,
   Flame,
   Link2,
-  Minus,
   Pencil,
   Plus,
-  Settings,
+  Timer,
   Trash2,
   Undo2,
   X,
   Zap,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 import {
-  AlarmSoundType,
   soundAlarm,
 } from "@/lib/workout/audio-alarm";
 import {
@@ -30,21 +29,18 @@ import {
   prescribedWeightLabel,
   programById,
   sessionExercises,
-  WEIGHT_STEP,
 } from "@/lib/workout/program";
 import {
-  countTotalSets,
   exerciseProgress,
   findExercisePR,
   formatClock,
   formatKg,
-  formatSet,
-  sessionVolume,
   setMeetsTarget,
 } from "@/lib/workout/stats";
 import {
   selectActiveSession,
   useWorkoutStore,
+  type TimerSettings,
 } from "@/lib/workout/store";
 import type { ExerciseDef, LoggedSet, ProgramDay, Session } from "@/lib/workout/types";
 import { AppShell } from "./shell";
@@ -71,15 +67,12 @@ export function SessionScreen() {
   const skipRest = useWorkoutStore((s) => s.skipRest);
   const setActiveExercise = useWorkoutStore((s) => s.setActiveExercise);
   const finishSession = useWorkoutStore((s) => s.finishSession);
-  const updateTimerSettings = useWorkoutStore((s) => s.updateTimerSettings);
   const addExerciseToActiveSession = useWorkoutStore((s) => s.addExerciseToActiveSession);
   const removeExerciseFromActiveSession = useWorkoutStore((s) => s.removeExerciseFromActiveSession);
   const linkSupersetInSession = useWorkoutStore((s) => s.linkSupersetInSession);
   const unlinkSupersetInSession = useWorkoutStore((s) => s.unlinkSupersetInSession);
 
-  const [showSettings, setShowSettings] = useState(false);
   const [showAddExercise, setShowAddExercise] = useState(false);
-  const [showPlateCalc, setShowPlateCalc] = useState(false);
   const [showFinishedModal, setShowFinishedModal] = useState(false);
   const [showSupersetModal, setShowSupersetModal] = useState(false);
   const [editingSet, setEditingSet] = useState<{ exerciseId: string; set: LoggedSet } | null>(null);
@@ -211,7 +204,8 @@ export function SessionScreen() {
         <button
           type="button"
           onClick={handlePause}
-          aria-label="Pause session"
+          aria-label="Leave session — it stays active so you can resume"
+          title="Leave session (stays active)"
           className="flex size-9 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-fg"
         >
           <X className="size-4" />
@@ -234,14 +228,10 @@ export function SessionScreen() {
         {/* Live session elapsed duration */}
         <SessionElapsedTimer startedAt={session.startedAt} />
 
-        {/* Timer/Alarm Settings button */}
-        <button
-          type="button"
-          aria-label="Timer and Alarm settings"
-          onClick={() => {
-            soundAlarm.unlockAudio();
-            setShowSettings(true);
-          }}
+        {/* Timer/Alarm Settings link */}
+        <Link
+          to="/settings"
+          aria-label="Timer and alarm settings"
           className={cn(
             "flex size-8 items-center justify-center rounded-lg transition-colors",
             timerSettings.alarmSound
@@ -254,7 +244,7 @@ export function SessionScreen() {
           ) : (
             <BellOff className="size-3.5" />
           )}
-        </button>
+        </Link>
 
         <button
           type="button"
@@ -282,8 +272,9 @@ export function SessionScreen() {
                 key={ex.id}
                 type="button"
                 onClick={() => setActiveExercise(ex.id)}
+                aria-label={`Go to ${ex.name} — ${session.logs[ex.id]?.length ?? 0} of ${ex.minSets} sets logged`}
                 className={cn(
-                  "flex h-7 shrink-0 items-center gap-1 rounded-lg px-2 text-[11px] font-bold tabular-nums transition-colors",
+                  "flex h-8 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-bold tabular-nums transition-colors",
                   isActive
                     ? sId
                       ? "bg-purple-600 text-white shadow-xs border border-purple-400"
@@ -300,7 +291,7 @@ export function SessionScreen() {
                 )}
               >
                 <span>{label}.</span>
-                <span className="max-w-[75px] truncate">{ex.name.split(" ")[0]}</span>
+                <span className="max-w-[90px] truncate">{ex.name.split(" ").slice(0, 2).join(" ")}</span>
                 {isDone && <Check className="size-3 shrink-0" />}
               </button>
             );
@@ -393,10 +384,15 @@ export function SessionScreen() {
                 const meets = setMeetsTarget(activeExercise, set);
 
                 return (
-                  <div
+                  <button
                     key={set.id}
+                    type="button"
                     onClick={() => setEditingSet({ exerciseId: activeExercise.id, set })}
-                    className="grid grid-cols-[2.5rem_1fr_4rem_4rem_2rem] gap-1 items-center px-2 py-2 text-xs transition-colors hover:bg-surface-2/60 cursor-pointer rounded-lg -mx-0.5"
+                    aria-label={`Edit set ${idx + 1}: ${formatKg(set.weightKg)} kg for ${set.reps} reps`}
+                    className={cn(
+                      "grid grid-cols-[2.5rem_1fr_4rem_4rem_2rem] gap-1 items-center px-2 py-2 text-xs transition-colors hover:bg-surface-2/60 cursor-pointer rounded-lg -mx-0.5",
+                      !meets && "bg-short/5",
+                    )}
                   >
                     <span className="font-bold text-subtle text-[11px]">
                       {idx + 1}
@@ -416,6 +412,7 @@ export function SessionScreen() {
 
                     <div className="flex justify-end">
                       <span
+                        aria-label={meets ? "Set meets the target" : "Set is below the target"}
                         className={cn(
                           "flex size-5 items-center justify-center rounded-full text-white",
                           meets ? "bg-hit" : "bg-short",
@@ -424,7 +421,7 @@ export function SessionScreen() {
                         <Check className="size-3" strokeWidth={3} />
                       </span>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -451,19 +448,12 @@ export function SessionScreen() {
         isLastInSuperset={isLastInSuperset}
         nextInSuperset={nextInSuperset}
         onLog={logSet}
+        onUndo={undoLastSet}
         onSkipRest={skipRest}
         onAddRestTime={addRestTime}
         onStartRest={startRest}
         onNext={handleNextExercise}
         onSwitchExercise={setActiveExercise}
-        onOpenPlateCalc={() => setShowPlateCalc(true)}
-      />
-
-      {/* Plate Calculator Modal */}
-      <PlateCalculatorModal
-        isOpen={showPlateCalc}
-        initialWeightKg={lastWeightKg[activeExercise.id] || defaultWeightKg(activeExercise)}
-        onClose={() => setShowPlateCalc(false)}
       />
 
       {/* Exercise Picker Modal */}
@@ -479,6 +469,7 @@ export function SessionScreen() {
         currentExercise={activeExercise}
         allExercises={exercises}
         currentSupersetId={activeSupersetId}
+        session={session}
         onClose={() => setShowSupersetModal(false)}
         onLink={(ids) => linkSupersetInSession(ids)}
         onUnlink={(id) => unlinkSupersetInSession(id)}
@@ -501,21 +492,13 @@ export function SessionScreen() {
         />
       )}
 
-      {/* Timer Settings Modal */}
-      {showSettings && (
-        <TimerSettingsModal
-          settings={timerSettings}
-          onUpdate={updateTimerSettings}
-          onClose={() => setShowSettings(false)}
-        />
-      )}
-
       {/* Workout Complete Modal */}
       <WorkoutFinishedModal
         isOpen={showFinishedModal}
         session={session}
         programs={programs}
-        onClose={handleConfirmFinish}
+        onFinish={handleConfirmFinish}
+        onDismiss={() => setShowFinishedModal(false)}
       />
     </AppShell>
   );
@@ -543,8 +526,11 @@ function SessionElapsedTimer({ startedAt }: { startedAt: number }) {
   const elapsedMs = Math.max(0, now - startedAt);
 
   return (
-    <div className="flex items-center gap-1 rounded-md bg-surface px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-muted shadow-card">
-      <span className="text-[10px]">⏱️</span>
+    <div
+      className="flex items-center gap-1 rounded-md bg-surface px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-muted shadow-card"
+      aria-label={`Session elapsed time ${formatClock(elapsedMs)}`}
+    >
+      <Timer className="size-3.5 text-muted" />
       <span>{formatClock(elapsedMs)}</span>
     </div>
   );
@@ -564,12 +550,12 @@ function SessionFooter({
   isLastInSuperset,
   nextInSuperset,
   onLog,
+  onUndo,
   onSkipRest,
   onAddRestTime,
   onStartRest,
   onNext,
   onSwitchExercise,
-  onOpenPlateCalc,
 }: {
   exercise: ExerciseDef;
   sets: LoggedSet[];
@@ -577,25 +563,26 @@ function SessionFooter({
   lastWeight?: number;
   restUntil: number | null;
   timerTotalMs: number;
-  timerSettings: typeof useWorkoutStore.getState.prototype.timerSettings;
+  timerSettings: TimerSettings;
   isLastLift: boolean;
   activeSupersetId: string | null;
   supersetExercises: ExerciseDef[];
   isLastInSuperset: boolean;
   nextInSuperset: ExerciseDef | null;
   onLog: (reps: number, weightKg: number) => void;
+  onUndo: () => void;
   onSkipRest: () => void;
   onAddRestTime: (ms: number) => void;
   onStartRest: (ms?: number) => void;
   onNext: () => void;
   onSwitchExercise: (id: string) => void;
-  onOpenPlateCalc: () => void;
 }) {
   const defaultWt = lastWeight ?? sets[sets.length - 1]?.weightKg ?? prevSets[sets.length]?.weightKg ?? defaultWeightKg(exercise);
   const defaultRp = sets[sets.length - 1]?.reps ?? prevSets[sets.length]?.reps ?? exercise.minReps;
 
   const [weightInput, setWeightInput] = useState<string>(String(defaultWt));
   const [repsInput, setRepsInput] = useState<string>(String(defaultRp));
+  const [showPlateCalc, setShowPlateCalc] = useState(false);
 
   useEffect(() => {
     const nextDefaultWt = lastWeight ?? sets[sets.length - 1]?.weightKg ?? prevSets[sets.length]?.weightKg ?? defaultWeightKg(exercise);
@@ -645,9 +632,9 @@ function SessionFooter({
 
   const buttonLabel = isSuperset
     ? !isLastInSuperset && nextInSuperset
-      ? `Log & Next: ${nextInSuperset.name.split(" ")[0]} ➔`
-      : `Log Round & Rest ⏱️`
-    : `Log Set ${sets.length + 1}`;
+      ? `Log set · switch to ${nextInSuperset.name.split(" ")[0]}`
+      : "Log set · start rest"
+    : `Log set ${sets.length + 1}`;
 
   return (
     <footer className="shrink-0 border-t border-border bg-surface px-3.5 pt-2 pb-3 shadow-lg">
@@ -655,8 +642,7 @@ function SessionFooter({
       <RestTimerWidget
         until={restUntil}
         total={timerTotalMs}
-        settings={timerSettings}
-        exerciseName={exercise.name}
+        defaultRestMs={timerSettings.defaultRestMs}
         onSkip={onSkipRest}
         onAdd={onAddRestTime}
         onStart={onStartRest}
@@ -672,11 +658,12 @@ function SessionFooter({
             </span>
             <button
               type="button"
-              onClick={onOpenPlateCalc}
-              title="Open Plate Calculator"
-              className="text-[11px] font-bold text-accent hover:underline flex items-center gap-0.5"
+              onClick={() => setShowPlateCalc(true)}
+              aria-label="Open plate calculator"
+              className="flex items-center gap-1 text-[11px] font-bold text-accent hover:underline"
             >
-              <span>🏋️</span> Plates
+              <Dumbbell className="size-3.5" />
+              Plates
             </button>
           </div>
 
@@ -684,6 +671,7 @@ function SessionFooter({
             <button
               type="button"
               onClick={() => stepWeight(-2.5)}
+              aria-label="Decrease weight by 2.5 kg"
               className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface text-fg font-bold hover:bg-surface/80 active:scale-95"
             >
               -
@@ -694,29 +682,17 @@ function SessionFooter({
               step="0.5"
               value={weightInput}
               onChange={(e) => setWeightInput(e.target.value)}
+              aria-label="Weight in kilograms"
               className="h-8 text-center font-display text-lg font-bold p-0"
             />
             <button
               type="button"
               onClick={() => stepWeight(2.5)}
+              aria-label="Increase weight by 2.5 kg"
               className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface text-fg font-bold hover:bg-surface/80 active:scale-95"
             >
               +
             </button>
-          </div>
-
-          {/* Quick weight adjust pills */}
-          <div className="mt-1.5 flex justify-center gap-1">
-            {[-5, -2.5, +2.5, +5].map((d) => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => stepWeight(d)}
-                className="rounded bg-surface/80 px-1.5 py-0.5 text-[9px] font-semibold text-muted hover:text-fg"
-              >
-                {d > 0 ? `+${d}` : d}
-              </button>
-            ))}
           </div>
         </div>
 
@@ -735,6 +711,7 @@ function SessionFooter({
             <button
               type="button"
               onClick={() => stepReps(-1)}
+              aria-label="Decrease reps by 1"
               className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface text-fg font-bold hover:bg-surface/80 active:scale-95"
             >
               -
@@ -745,29 +722,17 @@ function SessionFooter({
               step="1"
               value={repsInput}
               onChange={(e) => setRepsInput(e.target.value)}
+              aria-label="Reps"
               className="h-8 text-center font-display text-lg font-bold p-0"
             />
             <button
               type="button"
               onClick={() => stepReps(1)}
+              aria-label="Increase reps by 1"
               className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface text-fg font-bold hover:bg-surface/80 active:scale-95"
             >
               +
             </button>
-          </div>
-
-          {/* Quick reps adjust pills */}
-          <div className="mt-1.5 flex justify-center gap-1">
-            {[-2, -1, +1, +2].map((d) => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => stepReps(d)}
-                className="rounded bg-surface/80 px-1.5 py-0.5 text-[9px] font-semibold text-muted hover:text-fg"
-              >
-                {d > 0 ? `+${d}` : d}
-              </button>
-            ))}
           </div>
         </div>
       </div>
@@ -790,6 +755,18 @@ function SessionFooter({
           {buttonLabel}
         </Button>
 
+        {sets.length > 0 && (
+          <button
+            type="button"
+            onClick={onUndo}
+            aria-label="Undo last logged set"
+            className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-fg shadow-xs"
+            title="Undo last logged set"
+          >
+            <Undo2 className="size-4" />
+          </button>
+        )}
+
         <Button
           variant="secondary"
           size="lg"
@@ -800,6 +777,14 @@ function SessionFooter({
           <ChevronRight className="size-3.5" />
         </Button>
       </div>
+
+      {/* Plate Calculator — can push the computed weight straight into the logger */}
+      <PlateCalculatorModal
+        isOpen={showPlateCalc}
+        initialWeightKg={Number(weightInput) || defaultWeightKg(exercise)}
+        onApplyWeight={(kg) => setWeightInput(String(kg))}
+        onClose={() => setShowPlateCalc(false)}
+      />
     </footer>
   );
 }
@@ -819,6 +804,7 @@ function EditSetModal({
 }) {
   const [wt, setWt] = useState(String(set.weightKg));
   const [rp, setRp] = useState(String(set.reps));
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (!isOpen) return null;
 
@@ -879,18 +865,44 @@ function EditSetModal({
 
         <div className="mt-4 flex gap-2">
           <Button className="flex-1" size="md" onClick={handleSave}>
-            Save Changes
+            Save changes
           </Button>
-          <Button
-            variant="danger"
-            size="md"
-            onClick={onDelete}
-            className="px-3"
-            title="Delete this set"
-          >
-            <Trash2 className="size-4" />
-          </Button>
+          {confirmDelete ? (
+            <>
+              <Button
+                variant="danger"
+                size="md"
+                onClick={onDelete}
+                className="px-3 font-semibold"
+              >
+                Confirm delete
+              </Button>
+              <Button
+                variant="ghost"
+                size="md"
+                onClick={() => setConfirmDelete(false)}
+                className="px-3"
+              >
+                Keep
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="danger"
+              size="md"
+              onClick={() => setConfirmDelete(true)}
+              className="px-3"
+              aria-label="Delete this set"
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          )}
         </div>
+        {confirmDelete && (
+          <p className="mt-2 text-[11px] text-miss">
+            Deleting can be undone from the notification that appears.
+          </p>
+        )}
       </div>
     </div>
   );
@@ -899,81 +911,40 @@ function EditSetModal({
 function RestTimerWidget({
   until,
   total,
-  settings,
-  exerciseName,
+  defaultRestMs,
   onSkip,
   onAdd,
   onStart,
 }: {
   until: number | null;
   total: number;
-  settings: typeof useWorkoutStore.getState.prototype.timerSettings;
-  exerciseName: string;
+  defaultRestMs: number;
   onSkip: () => void;
   onAdd: (ms: number) => void;
   onStart: (ms?: number) => void;
 }) {
+  // Alarm, countdown beeps, vibration and notifications are handled globally
+  // by RestAlarmManager (shell.tsx), so this widget only displays the countdown.
   const [now, setNow] = useState(Date.now());
-  const [alarmFired, setAlarmFired] = useState(false);
-  const lastSecRef = useRef<number>(-1);
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(interval);
+  }, []);
 
   const remainingMs = until ? Math.max(0, until - now) : 0;
   const isRunning = remainingMs > 0;
 
-  useEffect(() => {
-    if (!isRunning) {
-      if (until && !alarmFired && now >= until) {
-        setAlarmFired(true);
-        if (settings.alarmSound) {
-          soundAlarm.playAlarm(settings.alarmSoundType);
-        }
-        if (settings.alarmVibrate) {
-          soundAlarm.vibrate([200, 100, 200, 100, 400]);
-        }
-        if (settings.alarmNotifications && "Notification" in window) {
-          if (Notification.permission === "granted") {
-            try {
-              new Notification("Rest Time Finished!", {
-                body: `Time for your next set of ${exerciseName}!`,
-                icon: "/favicon.svg",
-              });
-            } catch (e) {
-              console.warn(e);
-            }
-          }
-        }
-      }
-      return;
-    }
-
-    setAlarmFired(false);
-    const interval = setInterval(() => {
-      const current = Date.now();
-      setNow(current);
-
-      if (settings.countdownBeeps && until) {
-        const remaining = Math.max(0, until - current);
-        const sec = Math.ceil(remaining / 1000);
-        if (sec <= 3 && sec > 0 && sec !== lastSecRef.current) {
-          lastSecRef.current = sec;
-          soundAlarm.playCountdownBeep(sec === 1);
-        }
-      }
-    }, 200);
-
-    return () => clearInterval(interval);
-  }, [isRunning, until, alarmFired, settings, exerciseName, now]);
-
   if (!isRunning && !until) {
     return (
-      <div className="flex items-center justify-between rounded-lg bg-surface-2/60 px-2.5 py-1 text-[11px] text-muted">
+      <div className="flex items-center justify-between rounded-lg bg-surface-2/60 px-2.5 py-1.5 text-xs text-muted">
         <span>Rest timer: inactive</span>
         <button
           type="button"
           onClick={() => onStart()}
           className="font-semibold text-accent hover:underline"
         >
-          Start {Math.round((settings.defaultRestMs || 90000) / 1000)}s rest
+          Start {Math.round((defaultRestMs || 90000) / 1000)}s rest
         </button>
       </div>
     );
@@ -993,27 +964,37 @@ function RestTimerWidget({
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <span className="text-xs">⏱️</span>
+          <Timer className="size-4 text-accent" />
           <span className="text-xs font-semibold text-fg">
-            {isFinished ? "Rest Complete! Ready for next set" : "Resting..."}
+            {isFinished ? "Rest complete — ready for the next set" : "Resting"}
           </span>
           <span className="font-display text-sm font-bold tabular-nums text-accent">
             {formatClock(remainingMs)}
           </span>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => onAdd(15_000)}
+            aria-label="Add 15 seconds to rest"
+            className="rounded bg-surface px-2 py-1 text-[11px] font-semibold text-muted hover:text-fg shadow-xs"
+          >
+            +15s
+          </button>
           <button
             type="button"
             onClick={() => onAdd(30_000)}
-            className="rounded bg-surface px-1.5 py-0.5 text-[10px] font-semibold text-muted hover:text-fg shadow-xs"
+            aria-label="Add 30 seconds to rest"
+            className="rounded bg-surface px-2 py-1 text-[11px] font-semibold text-muted hover:text-fg shadow-xs"
           >
             +30s
           </button>
           <button
             type="button"
             onClick={onSkip}
-            className="rounded bg-surface px-1.5 py-0.5 text-[10px] font-semibold text-muted hover:text-fg shadow-xs"
+            aria-label="Skip rest"
+            className="rounded bg-surface px-2 py-1 text-[11px] font-semibold text-muted hover:text-fg shadow-xs"
           >
             Skip
           </button>
@@ -1032,218 +1013,3 @@ function RestTimerWidget({
   );
 }
 
-function TimerSettingsModal({
-  settings,
-  onUpdate,
-  onClose,
-}: {
-  settings: typeof useWorkoutStore.getState.prototype.timerSettings;
-  onUpdate: (patch: Partial<typeof settings>) => void;
-  onClose: () => void;
-}) {
-  const [notifGranted, setNotifGranted] = useState(
-    typeof window !== "undefined" && "Notification" in window
-      ? Notification.permission === "granted"
-      : false,
-  );
-
-  const handleRequestNotif = async () => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      const res = await Notification.requestPermission();
-      if (res === "granted") {
-        setNotifGranted(true);
-        onUpdate({ alarmNotifications: true });
-      }
-    }
-  };
-
-  const handleTestSound = (type: AlarmSoundType) => {
-    soundAlarm.unlockAudio();
-    soundAlarm.playAlarm(type);
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-xs">
-      <div className="w-full max-w-md rounded-t-2xl border-t border-border bg-surface p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl">
-        <div className="flex items-center justify-between pb-2.5 border-b border-border">
-          <div className="flex items-center gap-1.5">
-            <Settings className="size-4 text-accent" />
-            <h2 className="text-sm font-bold text-fg">Timer & Alarm Settings</h2>
-          </div>
-          <button
-            type="button"
-            aria-label="Close settings"
-            onClick={onClose}
-            className="flex size-7 items-center justify-center rounded-md text-muted hover:text-fg"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
-
-        <div className="mt-3 space-y-3">
-          {/* Sound Alarm Toggle */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-fg">Sound Alarm</p>
-              <p className="text-[10px] text-muted">Play alarm when rest finishes</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => onUpdate({ alarmSound: !settings.alarmSound })}
-              className={cn(
-                "h-6 w-11 rounded-full p-0.5 transition-colors",
-                settings.alarmSound ? "bg-accent" : "bg-surface-2",
-              )}
-            >
-              <div
-                className={cn(
-                  "size-5 rounded-full bg-bg transition-transform",
-                  settings.alarmSound ? "translate-x-5" : "translate-x-0",
-                )}
-              />
-            </button>
-          </div>
-
-          {/* Sound Type Selection */}
-          {settings.alarmSound && (
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-subtle">
-                Alarm Sound Effect
-              </p>
-              <div className="mt-1.5 grid grid-cols-4 gap-1.5">
-                {(["chime", "bell", "beep", "gong"] as const).map(
-                  (soundType) => (
-                    <button
-                      key={soundType}
-                      type="button"
-                      onClick={() => {
-                        onUpdate({ alarmSoundType: soundType });
-                        handleTestSound(soundType);
-                      }}
-                      className={cn(
-                        "rounded-lg p-1.5 text-[11px] font-medium capitalize transition-colors",
-                        settings.alarmSoundType === soundType
-                          ? "bg-primary text-primary-fg"
-                          : "bg-surface-2 text-muted hover:text-fg",
-                      )}
-                    >
-                      {soundType.replace("_", " ")}
-                    </button>
-                  ),
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Countdown Beeps Toggle */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-fg">3-2-1 Countdown Beeps</p>
-              <p className="text-[10px] text-muted">Audio beeps on final 3 seconds</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => onUpdate({ countdownBeeps: !settings.countdownBeeps })}
-              className={cn(
-                "h-6 w-11 rounded-full p-0.5 transition-colors",
-                settings.countdownBeeps ? "bg-accent" : "bg-surface-2",
-              )}
-            >
-              <div
-                className={cn(
-                  "size-5 rounded-full bg-bg transition-transform",
-                  settings.countdownBeeps ? "translate-x-5" : "translate-x-0",
-                )}
-              />
-            </button>
-          </div>
-
-          {/* Vibration Toggle */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-fg">Vibration Alarm</p>
-              <p className="text-[10px] text-muted">Vibrate device on timer completion</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => onUpdate({ alarmVibrate: !settings.alarmVibrate })}
-              className={cn(
-                "h-6 w-11 rounded-full p-0.5 transition-colors",
-                settings.alarmVibrate ? "bg-accent" : "bg-surface-2",
-              )}
-            >
-              <div
-                className={cn(
-                  "size-5 rounded-full bg-bg transition-transform",
-                  settings.alarmVibrate ? "translate-x-5" : "translate-x-0",
-                )}
-              />
-            </button>
-          </div>
-
-          {/* Browser Notifications Toggle */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-fg">Background Notifications</p>
-              <p className="text-[10px] text-muted">Notify even if browser is in background</p>
-            </div>
-            {notifGranted ? (
-              <button
-                type="button"
-                onClick={() => onUpdate({ alarmNotifications: !settings.alarmNotifications })}
-                className={cn(
-                  "h-6 w-11 rounded-full p-0.5 transition-colors",
-                  settings.alarmNotifications ? "bg-accent" : "bg-surface-2",
-                )}
-              >
-                <div
-                  className={cn(
-                    "size-5 rounded-full bg-bg transition-transform",
-                    settings.alarmNotifications ? "translate-x-5" : "translate-x-0",
-                  )}
-                />
-              </button>
-            ) : (
-              <Button size="sm" variant="secondary" onClick={handleRequestNotif}>
-                Enable
-              </Button>
-            )}
-          </div>
-
-          {/* Default Rest Timer Duration */}
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-subtle">
-              Default Rest Duration
-            </p>
-            <div className="mt-1.5 grid grid-cols-4 gap-1.5">
-              {[
-                { label: "45s", ms: 45_000 },
-                { label: "60s", ms: 60_000 },
-                { label: "90s", ms: 90_000 },
-                { label: "2m", ms: 120_000 },
-              ].map((item) => (
-                <button
-                  key={item.ms}
-                  type="button"
-                  onClick={() => onUpdate({ defaultRestMs: item.ms })}
-                  className={cn(
-                    "rounded-lg p-1.5 text-xs font-medium transition-colors",
-                    settings.defaultRestMs === item.ms
-                      ? "bg-primary text-primary-fg"
-                      : "bg-surface-2 text-muted hover:text-fg",
-                  )}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <Button size="md" className="mt-4 w-full font-semibold" onClick={onClose}>
-          Done
-        </Button>
-      </div>
-    </div>
-  );
-}

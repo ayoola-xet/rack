@@ -2,14 +2,15 @@ import { useState } from "react";
 import { Link2, Unlink, X, Check, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { ExerciseDef } from "@/lib/workout/types";
-import { getExerciseSupersetId, getSupersetExercises } from "@/lib/workout/program";
+import type { ExerciseDef, Session } from "@/lib/workout/types";
+import { getSupersetExercises } from "@/lib/workout/program";
 
 export function SupersetModal({
   isOpen,
   currentExercise,
   allExercises,
   currentSupersetId,
+  session,
   onClose,
   onLink,
   onUnlink,
@@ -18,6 +19,7 @@ export function SupersetModal({
   currentExercise: ExerciseDef;
   allExercises: ExerciseDef[];
   currentSupersetId: string | null;
+  session?: Session | null;
   onClose: () => void;
   onLink: (exerciseIds: string[]) => void;
   onUnlink: (exerciseId: string) => void;
@@ -27,8 +29,8 @@ export function SupersetModal({
   if (!isOpen) return null;
 
   const otherExercises = allExercises.filter((e) => e.id !== currentExercise.id);
-  const existingGroup = currentSupersetId
-    ? allExercises.filter((e) => (e.supersetId ?? null) === currentSupersetId)
+  const groupExercises = currentSupersetId
+    ? getSupersetExercises(allExercises, currentSupersetId, session)
     : [];
 
   const toggleSelect = (id: string) => {
@@ -83,19 +85,17 @@ export function SupersetModal({
               <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400">
                 Exercises in this Superset:
               </span>
-              {allExercises
-                .filter((e) => (e.supersetId ?? null) === currentSupersetId)
-                .map((ex, idx) => (
-                  <div
-                    key={ex.id}
-                    className="flex items-center justify-between text-xs font-medium text-fg py-0.5"
-                  >
-                    <span>
-                      {currentSupersetId}{idx + 1}. {ex.name}
-                    </span>
-                    <span className="text-[11px] text-muted">{ex.group}</span>
-                  </div>
-                ))}
+              {groupExercises.map((ex, idx) => (
+                <div
+                  key={ex.id}
+                  className="flex items-center justify-between text-xs font-medium text-fg py-0.5"
+                >
+                  <span>
+                    {currentSupersetId}{idx + 1}. {ex.name}
+                  </span>
+                  <span className="text-[11px] text-muted">{ex.group}</span>
+                </div>
+              ))}
             </div>
 
             <Button

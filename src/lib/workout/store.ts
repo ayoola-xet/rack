@@ -24,6 +24,18 @@ import type {
 } from "./types";
 import type { AlarmSoundType } from "./audio-alarm";
 
+export type Toast = {
+  id: string;
+  message: string;
+  tone?: "info" | "danger";
+  canUndo?: boolean;
+};
+
+type UndoEntry =
+  | { kind: "set"; sessionId: string; exerciseId: string; set: LoggedSet; index: number }
+  | { kind: "session"; session: Session }
+  | { kind: "finish"; sessionId: string };
+
 export type TimerSettings = {
   alarmSound: boolean;
   alarmSoundType: AlarmSoundType;
@@ -59,6 +71,12 @@ export type WorkoutState = {
   bodyWeight: BodyWeightLog[];
   goals: Goals;
   timerSettings: TimerSettings;
+  toasts: Toast[];
+  lastUndo: UndoEntry | null;
+
+  pushToast: (message: string, opts?: { tone?: "info" | "danger"; canUndo?: boolean }) => void;
+  dismissToast: (id: string) => void;
+  restoreLastUndo: () => void;
 
   startDay: (dayId: string) => void;
   startQuickSession: (title?: string) => void;
@@ -179,6 +197,51 @@ export const useWorkoutStore = create<WorkoutState>()(
       bodyWeight: [],
       goals: defaultGoals(),
       timerSettings: defaultTimerSettings(),
+      toasts: [],
+      lastUndo: null,
+
+      pushToast: (message, opts = {}) => {
+        set((state) => ({
+          toasts: [
+            ...state.toasts,
+            { id: crypto.randomUUID(), message, tone: opts.tone, canUndo: opts.canUndo },
+          ],
+        }));
+      },
+
+      dismissToast: (id) => {
+        set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
+      },
+
+      restoreLastUndo: () => {
+        const undo = get().lastUndo;
+        if (!undo) return;
+        set((state) => {
+          if (undo.kind === "set") {
+            return {
+              lastUndo: null,
+              sessions: updateSessionInList(state.sessions, undo.sessionId, (s) => {
+                const sets = s.logs[undo.exerciseId] ?? [];
+                const next = [...sets];
+                next.splice(Math.min(undo.index, next.length), 0, undo.set);
+                return { ...s, logs: { ...s.logs, [undo.exerciseId]: next } };
+              }),
+            };
+          }
+          if (undo.kind === "finish") {
+            // Re-open a just-finished session so the workout can continue.
+            return {
+              lastUndo: null,
+              activeSessionId: undo.sessionId,
+              sessions: updateSessionInList(state.sessions, undo.sessionId, (s) => ({
+                ...s,
+                finishedAt: null,
+              })),
+            };
+          }
+          return { lastUndo: null, sessions: [undo.session, ...state.sessions] };
+        });
+      },
 
       startDay: (dayId: string) => {
         if (selectActiveSession(get())) return;
@@ -265,7 +328,6 @@ export const useWorkoutStore = create<WorkoutState>()(
       setActiveExercise: (exerciseId: string) => {
         if (!selectActiveSession(get())) return;
         set((state) => ({
-          restUntil: null,
           sessions: state.activeSessionId
             ? updateSessionInList(state.sessions, state.activeSessionId, (s) => ({
                 ...s,
@@ -335,19 +397,25 @@ export const useWorkoutStore = create<WorkoutState>()(
       deleteSet: (exerciseId: string, setId: string) => {
         const session = selectActiveSession(get());
         if (!session) return;
+        const sets = session.logs[exerciseId] ?? [];
+        const idx = sets.findIndex((set) => set.id === setId);
+        if (idx < 0) return;
+        const removed = sets[idx];
 
         set((state) => ({
+          lastUndo: { kind: "set", sessionId: session.id, exerciseId, set: removed, index: idx },
           sessions: updateSessionInList(state.sessions, session.id, (s) => {
-            const sets = s.logs[exerciseId] ?? [];
+            const current = s.logs[exerciseId] ?? [];
             return {
               ...s,
               logs: {
                 ...s.logs,
-                [exerciseId]: sets.filter((set) => set.id !== setId),
+                [exerciseId]: current.filter((set) => set.id !== setId),
               },
             };
           }),
         }));
+        get().pushToast("Set deleted", { tone: "danger", canUndo: true });
       },
 
       undoLastSet: () => {
@@ -355,9 +423,17 @@ export const useWorkoutStore = create<WorkoutState>()(
         if (!session) return;
         const currentSets = session.logs[session.activeExerciseId] ?? [];
         if (currentSets.length === 0) return;
+        const removed = currentSets[currentSets.length - 1];
 
         set((state) => ({
           restUntil: null,
+          lastUndo: {
+            kind: "set",
+            sessionId: session.id,
+            exerciseId: session.activeExerciseId,
+            set: removed,
+            index: currentSets.length - 1,
+          },
           sessions: state.activeSessionId
             ? updateSessionInList(state.sessions, state.activeSessionId, (s) => ({
                 ...s,
@@ -368,6 +444,7 @@ export const useWorkoutStore = create<WorkoutState>()(
               }))
             : state.sessions,
         }));
+        get().pushToast("Set removed", { canUndo: true });
       },
 
       loadSplitTemplate: (templateKey: "ppl" | "upper_lower" | "full_body") => {
@@ -511,6 +588,7 @@ export const useWorkoutStore = create<WorkoutState>()(
         set((state) => ({
           activeSessionId: null,
           restUntil: null,
+          lastUndo: { kind: "finish", sessionId: session.id },
           sessions: state.activeSessionId
             ? updateSessionInList(state.sessions, state.activeSessionId, (s) => ({
                 ...s,
@@ -518,25 +596,32 @@ export const useWorkoutStore = create<WorkoutState>()(
               }))
             : state.sessions,
         }));
+        get().pushToast("Session saved", { canUndo: true });
       },
 
       discardSession: () => {
         const activeId = get().activeSessionId;
         if (!activeId) return;
+        const session = selectActiveSession(get());
         set((state) => ({
           activeSessionId: null,
           restUntil: null,
+          lastUndo: session ? { kind: "session", session } : state.lastUndo,
           sessions: state.sessions.filter((s) => s.id !== activeId),
         }));
+        get().pushToast("Session discarded", { tone: "danger", canUndo: true });
       },
 
       removeSession: (sessionId: string) => {
+        const session = get().sessions.find((s) => s.id === sessionId);
         set((state) => ({
           sessions: state.sessions.filter((s) => s.id !== sessionId),
+          lastUndo: session ? { kind: "session", session } : state.lastUndo,
           ...(state.activeSessionId === sessionId
             ? { activeSessionId: null, restUntil: null }
             : {}),
         }));
+        get().pushToast("Log dropped", { tone: "danger", canUndo: true });
       },
 
       createDay: () => {
@@ -801,14 +886,16 @@ export const useWorkoutStore = create<WorkoutState>()(
     }),
     {
       name: "rack-workout-v1",
-      version: 4,
+      version: 5,
       skipHydration: true,
       partialize: (state) => ({
         programs: state.programs,
         sessions: state.sessions,
         activeSessionId: state.activeSessionId,
-        restUntil: state.restUntil,
-        timerTotalMs: state.timerTotalMs,
+        // Never persist a live countdown — reopening the app must not
+        // resurrect an expired rest timer (or fire a stale alarm).
+        restUntil: null,
+        timerTotalMs: REST_MS,
         lastWeightKg: state.lastWeightKg,
         bodyWeight: state.bodyWeight,
         goals: state.goals,
@@ -827,9 +914,20 @@ export const useWorkoutStore = create<WorkoutState>()(
             ? { ...defaultTimerSettings(), ...state.timerSettings }
             : defaultTimerSettings();
 
+        const sessions = Array.isArray(state.sessions) ? state.sessions : [];
+        const activeSessionId =
+          state.activeSessionId && sessions.some((s) => s.id === state.activeSessionId)
+            ? state.activeSessionId
+            : null;
+
         return {
           ...state,
           programs,
+          sessions,
+          activeSessionId,
+          // Rest timers are runtime-only; never resurrect an expired countdown.
+          restUntil: null,
+          timerTotalMs: REST_MS,
           bodyWeight,
           goals,
           timerSettings,
